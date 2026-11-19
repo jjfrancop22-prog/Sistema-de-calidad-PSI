@@ -1,0 +1,136 @@
+rules_version = '2';
+service cloud.firestore {
+ match /databases/{database}/documents {
+  function signedIn(){return request.auth != null;}
+  function userPath(){return /databases/$(database)/documents/users/$(request.auth.uid);}
+  function active(){return signedIn() && exists(userPath()) && get(userPath()).data.active == true;}
+  function manager(){return active() && get(userPath()).data.role in ['ADMIN','CALIDAD'];}
+  function allowedRecord(){return request.resource.data.keys().hasOnly(['title','requirementId','createdAt','createdBy','status']) && request.resource.data.keys().hasAll(['title','requirementId','createdAt','createdBy','status']) && request.resource.data.title is string && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 240 && request.resource.data.requirementId is string && request.resource.data.requirementId.size() <= 12 && request.resource.data.createdBy == request.auth.uid && request.resource.data.createdAt == request.time && request.resource.data.status == 'DRAFT';}
+  match /users/{uid}{allow get:if signedIn() && (request.auth.uid==uid || manager());allow list:if manager();allow create,update,delete:if false;}
+  match /sgcPersonnel/{id}{
+   allow get,list: if active();
+   allow create: if manager() && request.resource.data.keys().hasOnly(['name','identity','position','area','organization','linkType','contract','joined','left','active','mc0201','mc0203','createdAt','createdBy','updatedAt','updatedBy','functions','connections']) && request.resource.data.createdBy==request.auth.uid && request.resource.data.updatedBy==request.auth.uid && request.resource.data.createdAt==request.time && request.resource.data.updatedAt==request.time && request.resource.data.name is string && request.resource.data.name.size()>0 && request.resource.data.name.size()<=160 && request.resource.data.position is string && request.resource.data.area is string && request.resource.data.functions is list && request.resource.data.connections is list;
+   allow update: if manager() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','identity','position','area','organization','linkType','contract','joined','left','active','mc0201','mc0203','updatedAt','updatedBy','functions','connections']) && request.resource.data.updatedBy==request.auth.uid && request.resource.data.updatedAt==request.time && request.resource.data.name is string && request.resource.data.name.size()>0 && request.resource.data.name.size()<=160 && request.resource.data.functions is list && request.resource.data.connections is list;
+   allow delete: if false;
+  }
+  match /sgcPersonnelLinks/{id}{
+   allow get,list: if active();
+   allow create: if manager() && request.resource.data.keys().hasOnly(['personId','personName','personPosition','targetType','targetId','targetKey','targetLabel','requirementId','role','active','createdBy','createdAt','updatedBy','updatedAt']) && request.resource.data.keys().hasAll(['personId','personName','personPosition','targetType','targetId','targetKey','targetLabel','requirementId','role','active','createdBy','createdAt','updatedBy','updatedAt']) && request.resource.data.personId is string && request.resource.data.personId.size()>0 && request.resource.data.targetId is string && request.resource.data.targetId.size()>0 && request.resource.data.targetType in ['LIBRARY','REQUIREMENT'] && request.resource.data.targetKey == request.resource.data.targetType + ':' + request.resource.data.targetId && request.resource.data.personName is string && request.resource.data.personName.size()<=160 && request.resource.data.targetLabel is string && request.resource.data.targetLabel.size()<=240 && request.resource.data.role in ['RESPONSABLE','ELABORADOR','REVISOR','APROBADOR','RESPONSABLE DE ACTIVIDAD','RESPONSABLE DE EVIDENCIA'] && request.resource.data.active==true && request.resource.data.createdBy==request.auth.uid && request.resource.data.updatedBy==request.auth.uid && request.resource.data.createdAt==request.time && request.resource.data.updatedAt==request.time;
+   allow update: if manager() && resource.data.active==true && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active','updatedBy','updatedAt']) && request.resource.data.active==false && request.resource.data.updatedBy==request.auth.uid && request.resource.data.updatedAt==request.time;
+   allow delete: if false;
+  }
+  match /dashboards/{id}{allow get:if active() && id=='global';allow list,write:if false;}
+  match /notifications/{id}{allow get,list:if active() && resource.data.recipientId==request.auth.uid;allow update:if active() && resource.data.recipientId==request.auth.uid && resource.data.status=='OPEN' && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','resolvedAt','resolvedBy']) && request.resource.data.status=='RESOLVED' && request.resource.data.resolvedBy==request.auth.uid && request.resource.data.resolvedAt==request.time;allow create:if active()
+    && request.resource.data.keys().hasOnly(['recipientId','createdBy','eventKey','title','message','requirementId','status','createdAt'])
+    && request.resource.data.keys().hasAll(['recipientId','createdBy','eventKey','title','message','requirementId','status','createdAt'])
+    && request.resource.data.recipientId == request.auth.uid
+    && request.resource.data.createdBy == request.auth.uid
+    && request.resource.data.eventKey is string
+    && request.resource.data.eventKey.size() > 0 && request.resource.data.eventKey.size() <= 110
+    && id == request.auth.uid + '_' + request.resource.data.eventKey
+    && request.resource.data.title is string && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 160
+    && request.resource.data.message is string && request.resource.data.message.size() <= 500
+    && request.resource.data.requirementId is string && request.resource.data.requirementId.size() <= 12
+    && request.resource.data.status == 'OPEN'
+    && request.resource.data.createdAt == request.time;
+   allow delete:if false;}
+  match /sgcDocuments/{id}{allow get,list:if active();allow create:if manager() && request.resource.data.keys().hasOnly(['title','requirementId','createdAt','createdBy','status','code','version','responsible','description']) && request.resource.data.keys().hasAll(['title','requirementId','createdAt','createdBy','status','code','version','responsible','description']) && request.resource.data.title is string && request.resource.data.title.size()>0 && request.resource.data.title.size()<=240 && request.resource.data.requirementId is string && request.resource.data.requirementId.size()<=12 && request.resource.data.createdBy==request.auth.uid && request.resource.data.createdAt==request.time && request.resource.data.status=='DRAFT' && request.resource.data.code is string && request.resource.data.code.size()>0 && request.resource.data.code.size()<=40 && request.resource.data.version is string && request.resource.data.version.size()>0 && request.resource.data.version.size()<=20 && request.resource.data.responsible is string && request.resource.data.responsible.size()>0 && request.resource.data.responsible.size()<=120 && request.resource.data.description is string && request.resource.data.description.size()<=500;allow update:if manager()
+    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title','code','version','responsible','description','status','updatedAt','updatedBy','decisionNote'])
+    && request.resource.data.updatedBy == request.auth.uid
+    && request.resource.data.updatedAt == request.time
+    && ((resource.data.status == 'DRAFT' && request.resource.data.status == 'DRAFT'
+         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title','code','version','responsible','description','updatedAt','updatedBy'])
+         && request.resource.data.title is string && request.resource.data.title.size()>0 && request.resource.data.title.size()<=240
+         && request.resource.data.code is string && request.resource.data.code.size()>0 && request.resource.data.code.size()<=40
+         && request.resource.data.version is string && request.resource.data.version.size()>0 && request.resource.data.version.size()<=20
+         && request.resource.data.responsible is string && request.resource.data.responsible.size()>0 && request.resource.data.responsible.size()<=120
+         && request.resource.data.description is string && request.resource.data.description.size()<=500)
+       || (resource.data.status == 'DRAFT' && request.resource.data.status == 'IN_REVIEW'
+           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt','updatedBy','decisionNote'])
+           && request.resource.data.decisionNote is string && request.resource.data.decisionNote.size()<=500)
+       || (resource.data.status == 'IN_REVIEW' && request.resource.data.status == 'DRAFT'
+           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt','updatedBy','decisionNote'])
+           && request.resource.data.decisionNote is string && request.resource.data.decisionNote.size()<=500)
+       || (resource.data.status == 'IN_REVIEW' && request.resource.data.status == 'APPROVED'
+           && get(userPath()).data.role == 'ADMIN' && resource.data.createdBy != request.auth.uid
+           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt','updatedBy','decisionNote'])
+           && request.resource.data.decisionNote is string && request.resource.data.decisionNote.size()<=500));
+   allow delete:if false;}
+  match /sgcLibrary/{id}{
+   allow get,list: if active();
+   allow create: if manager()
+    && request.resource.data.keys().hasOnly(['code','title','version','responsible','type','description','referenceUrl','referenceFileName','fileStored','requirementIds','status','createdBy','createdAt','updatedBy','updatedAt'])
+    && request.resource.data.code is string && request.resource.data.code.size()>0 && request.resource.data.code.size()<=40
+    && request.resource.data.title is string && request.resource.data.title.size()>0 && request.resource.data.title.size()<=240
+    && request.resource.data.version is string && request.resource.data.version.size()>0 && request.resource.data.version.size()<=20
+    && request.resource.data.responsible is string && request.resource.data.responsible.size()>0 && request.resource.data.responsible.size()<=120
+    && request.resource.data.type in ['PROCEDIMIENTO','MANUAL','POLITICA','INSTRUCTIVO','FORMATO','EXTERNO']
+    && request.resource.data.description is string && request.resource.data.description.size()<=500
+    && request.resource.data.referenceUrl is string && request.resource.data.referenceUrl.size()<=2048
+    && request.resource.data.referenceFileName is string && request.resource.data.referenceFileName.size()<=255
+    && request.resource.data.fileStored is bool
+    && request.resource.data.requirementIds is list && request.resource.data.requirementIds.size()<=40
+    && request.resource.data.status=='REGISTERED'
+    && request.resource.data.createdBy==request.auth.uid && request.resource.data.updatedBy==request.auth.uid
+    && request.resource.data.createdAt==request.time && request.resource.data.updatedAt==request.time;
+   allow update: if manager()
+    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['requirementIds','version','fileStored','referenceFileName','approvalStatus','updatedBy','updatedAt'])
+    && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['approvalStatus']) || (request.resource.data.diff(resource.data).affectedKeys().hasAny(['version','fileStored','referenceFileName']) && request.resource.data.approvalStatus == 'REGISTERED'))
+    && request.resource.data.requirementIds is list && request.resource.data.requirementIds.size()<=40
+    && request.resource.data.updatedBy==request.auth.uid && request.resource.data.updatedAt==request.time;
+   allow update: if manager()
+    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['approvalStatus','reviewRequestedBy','reviewRequestedAt','approvedBy','approvedAt','approvalVersion','decisionNote','updatedBy','updatedAt'])
+    && request.resource.data.updatedBy == request.auth.uid && request.resource.data.updatedAt == request.time
+    && request.resource.data.decisionNote is string && request.resource.data.decisionNote.size()<=500
+    && (( ( !('approvalStatus' in resource.data) || resource.data.approvalStatus in ['REGISTERED','RETURNED'])
+           && request.resource.data.approvalStatus == 'IN_REVIEW'
+           && request.resource.data.reviewRequestedBy == request.auth.uid
+           && request.resource.data.reviewRequestedAt == request.time
+           && (resource.data.fileStored == true || resource.data.code == 'PG0201'))
+       || (resource.data.approvalStatus == 'IN_REVIEW'
+           && get(userPath()).data.role in ['ADMIN','CALIDAD']
+           && ((request.resource.data.approvalStatus == 'APPROVED'
+                && request.resource.data.approvedBy == request.auth.uid
+                && request.resource.data.approvedAt == request.time
+                && request.resource.data.approvalVersion == resource.data.version)
+             || request.resource.data.approvalStatus == 'RETURNED')));
+   allow delete: if false;
+   match /approvalEvents/{eventId}{
+    allow get,list: if active();
+    allow create: if manager()
+     && request.resource.data.keys().hasOnly(['action','version','actor','at','note'])
+     && request.resource.data.keys().hasAll(['action','version','actor','at','note'])
+     && request.resource.data.actor == request.auth.uid
+     && request.resource.data.at == request.time
+     && request.resource.data.note is string && request.resource.data.note.size()<=500
+     && request.resource.data.version == getAfter(/databases/$(database)/documents/sgcLibrary/$(id)).data.version
+     && ((request.resource.data.action == 'REVIEW' && getAfter(/databases/$(database)/documents/sgcLibrary/$(id)).data.approvalStatus == 'IN_REVIEW' && getAfter(/databases/$(database)/documents/sgcLibrary/$(id)).data.reviewRequestedBy == request.auth.uid)
+       || (request.resource.data.action == 'APPROVE' && getAfter(/databases/$(database)/documents/sgcLibrary/$(id)).data.approvalStatus == 'APPROVED' && getAfter(/databases/$(database)/documents/sgcLibrary/$(id)).data.approvedBy == request.auth.uid)
+       || (request.resource.data.action == 'RETURN' && getAfter(/databases/$(database)/documents/sgcLibrary/$(id)).data.approvalStatus == 'RETURNED' && get(userPath()).data.role in ['ADMIN','CALIDAD']));
+    allow update,delete: if false;
+   }
+  }
+  match /sgcLibrary/{libraryId}/versions/{versionId}{
+   allow get,list:if active();
+   allow create:if manager() && request.resource.data.keys().hasOnly(['version','filename','size','sha256','parts','status','createdBy','createdAt']) && request.resource.data.version is string && request.resource.data.version.size()>0 && request.resource.data.version.size()<=20 && request.resource.data.filename is string && request.resource.data.filename.size()<=255 && request.resource.data.size is int && request.resource.data.size>0 && request.resource.data.size<=409600 && request.resource.data.parts is int && request.resource.data.parts>0 && request.resource.data.parts<=40 && request.resource.data.sha256 is string && request.resource.data.sha256.size()==64 && request.resource.data.status=='UPLOADING' && request.resource.data.createdBy==request.auth.uid && request.resource.data.createdAt==request.time;
+   allow update:if manager() && resource.data.status=='UPLOADING' && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','completedAt']) && request.resource.data.status=='READY' && request.resource.data.completedAt==request.time;
+   allow delete:if false;
+   match /chunks/{chunkId}{
+    allow get:if active();allow list:if false;
+    allow create:if manager() && get(/databases/$(database)/documents/sgcLibrary/$(libraryId)/versions/$(versionId)).data.status=='UPLOADING' && request.resource.data.keys().hasOnly(['data','index']) && request.resource.data.data is string && request.resource.data.data.size()<=16000 && request.resource.data.index is int && request.resource.data.index>=0 && request.resource.data.index<40;
+    allow update,delete:if false;
+   }
+  }
+  match /sgcRecords/{id}{allow get,list:if active();allow create:if manager() && allowedRecord();allow update,delete:if false;}
+  // V1.0.37 — Firma presencial: PIN y verificaciones exclusivamente del servidor.
+  match /sgcSignatureCredentials/{id}{
+   allow read,write: if false;
+  }
+  // Constancias inmutables para el cliente; escritura exclusiva del servicio Netlify.
+  match /sgcSignatureRecords/{id}{
+   allow get,list: if manager();
+   allow create,update,delete: if false;
+  }
+  match /{document=**}{allow read,write:if false;}
+ }
+}
