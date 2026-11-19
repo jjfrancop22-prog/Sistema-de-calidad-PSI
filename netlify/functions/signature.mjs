@@ -8,8 +8,19 @@ export async function handler(event){
  try{
  const db=database(),token=(event.headers.authorization||event.headers.Authorization||'').match(/^Bearer (.+)$/)?.[1];if(!token)return res(401,{error:'Sesión requerida'});
  const session=await admin.auth().verifyIdToken(token,true),profile=await db.doc(`users/${session.uid}`).get();if(!profile.exists||profile.data().active!==true||!['ADMIN','CALIDAD'].includes(profile.data().role))return res(403,{error:'Acceso no autorizado'});
- const data=JSON.parse(event.body||'{}'),{personId,action}=data;if(typeof personId!=='string'||!/^[\w-]{1,128}$/.test(personId))return res(400,{error:'Identificador inválido'});
+ const data=JSON.parse(event.body||'{}'),{personId,action}=data;
+ if(action==='overview'){
+  const snapshot=await db.collection('sgcSignatureRecords').where('documentCode','==','PSI-MC0201').limit(1000).get();
+  const records=snapshot.docs.map(d=>({...d.data(),signedAt:d.data().signedAt?.toDate?.().toISOString()||null})).filter(r=>r.documentVersion==='06'&&r.accepted===true);
+  return res(200,{ok:true,records});
+ }
+if(typeof personId!=='string'||!/^[\w-]{1,128}$/.test(personId))return res(400,{error:'Identificador inválido'});
  const person=await db.doc(`sgcPersonnel/${personId}`).get();if(!person.exists||person.data().active!==true)return res(404,{error:'Trabajador no activo'});
+ if(action==='records'){
+  const snapshot=await db.collection('sgcSignatureRecords').where('personId','==',personId).limit(100).get();
+  const records=snapshot.docs.map(d=>({...d.data(),signedAt:d.data().signedAt?.toDate?.().toISOString()||null})).filter(r=>r.documentCode==='PSI-MC0201'&&r.documentVersion==='06').sort((a,b)=>String(b.signedAt).localeCompare(String(a.signedAt)));
+  return res(200,{ok:true,records});
+ }
  const identity=String(data.identity||'').trim(),pin=String(data.pin||'').trim();if(!identity||identity!==String(person.data().identity||'').trim())return res(400,{error:'Cédula incorrecta'});
  if(!/^\d{4}$/.test(pin))return res(400,{error:'PIN de 4 números requerido'});
  const ref=db.doc(`sgcSignatureCredentials/${personId}`);
@@ -21,6 +32,7 @@ export async function handler(event){
  if(action!=='sign')return res(400,{error:'Acción desconocida'});
  const conflict=data.conflict,details=String(data.details||'').trim();if(!['none','yes'].includes(conflict)||(conflict==='yes'&&(!details||details.length>2000))||data.accepted!==true)return res(400,{error:'Complete la declaración y aceptación'});
  const docs=await db.collection('sgcLibrary').where('code','==','PSI-MC0201').limit(20).get();if(!docs.docs.some(d=>d.data().version==='06'&&d.data().approvalStatus==='APPROVED'&&d.data().fileStored===true))return res(409,{error:'Apruebe y archive PSI-MC0201 V06 en Biblioteca antes de firmar'});
+ const existing=await db.collection('sgcSignatureRecords').where('personId','==',personId).limit(100).get();if(existing.docs.some(d=>d.data().documentCode==='PSI-MC0201'&&d.data().documentVersion==='06'))return res(409,{error:'Ya existe una aceptación de esta edición. Consulte el documento firmado en el expediente.'});
  const id=randomUUID(),recordRef=db.doc(`sgcSignatureRecords/${id}`),payload={recordId:id,personId,personName:person.data().name,identityLast4:identity.slice(-4),documentCode:'PSI-MC0201',documentVersion:'06',requirementId:'4.1.1',conflict,details:conflict==='yes'?details:'',accepted:true,method:'CEDULA_PIN_PRESENCIAL',facilitatorUid:session.uid};
  const sha256=createHash('sha256').update(JSON.stringify(payload)).digest('hex');
  let success=false;
