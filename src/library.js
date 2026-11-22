@@ -35,10 +35,10 @@ export async function updateLibraryLinks(item,requirementIds,uid){const ref=doc(
 export async function readLocalReference(file){if(!file)return '';if(file.size>5*1024*1024)throw Error('Para analizar texto, seleccione un archivo menor a 5 MB.');if(/\.(txt|md|csv)$/i.test(file.name))return (await file.text()).slice(0,30000);return '';}
 
 // PDF immutable version blobs: chunks are read only on explicit preview.
-const MAX_PDF=400*1024, CHUNK=12000;
+const MAX_PDF=600*1024, CHUNK=12000;
 export async function storePdfVersion(item,file,version,uid){
  if(!file||file.type!=='application/pdf'&&!/\.pdf$/i.test(file.name))throw Error('Seleccione un PDF.');
- if(file.size>MAX_PDF)throw Error('El PDF supera el máximo permitido de 400 KB.');
+ if(file.size>MAX_PDF)throw Error('El PDF supera el máximo permitido de 600 KB.');
  const bytes=new Uint8Array(await file.arrayBuffer());
  if(String.fromCharCode(...bytes.slice(0,5))!=='%PDF-')throw Error('El archivo no tiene una cabecera PDF válida.');
  const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))).map(b=>b.toString(16).padStart(2,'0')).join('');
@@ -54,7 +54,7 @@ export async function storePdfVersion(item,file,version,uid){
  }catch(e){throw Error('Carga incompleta; la edición no se activó. '+e.message)}
 }
 export async function listPdfVersions(item){const snap=await getDocs(query(collection(db,'sgcLibrary',item.id,'versions'),limit(50)));return snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.status==='READY').sort((a,b)=>String(b.version).localeCompare(String(a.version),undefined,{numeric:true}));}
-export async function previewPdf(item,version){const key=libraryCodeId(version);const v=await getDoc(doc(db,'sgcLibrary',item.id,'versions',key));if(!v.exists()||v.data().status!=='READY')throw Error('Edición no disponible');const count=v.data().parts;if(!Number.isInteger(count)||count<1||count>40)throw Error('Archivo inválido');const blocks=await Promise.all(Array.from({length:count},(_,i)=>getDoc(doc(db,'sgcLibrary',item.id,'versions',key,'chunks',String(i).padStart(4,'0')))));if(blocks.some(b=>!b.exists()))throw Error('PDF incompleto');const raw=blocks.map(b=>atob(b.data().data));const length=raw.reduce((n,s)=>n+s.length,0);const bytes=new Uint8Array(length);let offset=0;for(const part of raw){for(let i=0;i<part.length;i++)bytes[offset++]=part.charCodeAt(i)}const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))).map(b=>b.toString(16).padStart(2,'0')).join('');if(digest!==v.data().sha256)throw Error('La integridad del archivo no coincide');return URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));}
+export async function previewPdf(item,version,revisionId=null){const key=revisionId||libraryCodeId(version);const v=await getDoc(doc(db,'sgcLibrary',item.id,'versions',key));if(!v.exists()||v.data().status!=='READY')throw Error('Edición no disponible');const count=v.data().parts;if(!Number.isInteger(count)||count<1||count>52)throw Error('Archivo inválido');const blocks=await Promise.all(Array.from({length:count},(_,i)=>getDoc(doc(db,'sgcLibrary',item.id,'versions',key,'chunks',String(i).padStart(4,'0')))));if(blocks.some(b=>!b.exists()))throw Error('PDF incompleto');const raw=blocks.map(b=>atob(b.data().data));const length=raw.reduce((n,s)=>n+s.length,0);const bytes=new Uint8Array(length);let offset=0;for(const part of raw){for(let i=0;i<part.length;i++)bytes[offset++]=part.charCodeAt(i)}const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))).map(b=>b.toString(16).padStart(2,'0')).join('');if(digest!==v.data().sha256)throw Error('La integridad del archivo no coincide');return URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));}
 
 // Approval is independent of the upload: authorized ADMIN or CALIDAD can review and approve, including their own review request.
 export async function decideLibraryApproval(item,action,uid,role,note=''){
@@ -83,4 +83,29 @@ export async function decideLibraryApproval(item,action,uid,role,note=''){
 export async function listLibraryApprovalEvents(item){
  const s=await getDocs(query(collection(db,'sgcLibrary',item.id,'approvalEvents'),limit(100)));
  return s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>(b.at?.seconds||0)-(a.at?.seconds||0));
+}
+
+// V1.0.44: immutable PDF replacement within the same controlled edition.
+// The original PDF remains archived; only the active PDF pointer changes.
+export async function replaceWithSignedPdf(item,file,uid,confirmation){
+ if(!confirmation)throw Error('Confirme que el contenido y la edición no han cambiado.');
+ if(!file||(!/\.pdf$/i.test(file.name)&&file.type!=='application/pdf'))throw Error('Seleccione un PDF firmado.');
+ if(file.size>MAX_PDF)throw Error('El PDF supera el máximo permitido de 600 KB.');
+ const bytes=new Uint8Array(await file.arrayBuffer());
+ if(String.fromCharCode(...bytes.slice(0,5))!=='%PDF-')throw Error('El archivo no es un PDF válido.');
+ const sha256=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))).map(b=>b.toString(16).padStart(2,'0')).join('');
+ const version=String(item.version),key=libraryCodeId(version);
+ const base=await getDoc(doc(db,'sgcLibrary',item.id,'versions',key));
+ if(!base.exists()||base.data().status!=='READY')throw Error('Primero registre el PDF original de esta edición.');
+ if(base.data().sha256===sha256)throw Error('El PDF seleccionado es idéntico al archivado.');
+ const revId=key+'__firma_'+crypto.randomUUID().replaceAll('-','').slice(0,16);
+ const ref=doc(db,'sgcLibrary',item.id,'versions',revId);
+ const parts=[];for(let i=0;i<bytes.length;i+=CHUNK){let str='';for(const b of bytes.subarray(i,i+CHUNK))str+=String.fromCharCode(b);parts.push(btoa(str));}
+ await setDoc(ref,{version,filename:file.name,size:file.size,sha256,parts:parts.length,status:'UPLOADING',createdBy:uid,createdAt:serverTimestamp(),revisionOf:key,reason:'PDF firmado recibido; mismo contenido y edición (declaración del responsable)'});
+ try{
+  for(let i=0;i<parts.length;i+=10){const batch=writeBatch(db);for(let j=i;j<Math.min(i+10,parts.length);j++)batch.set(doc(db,'sgcLibrary',item.id,'versions',revId,'chunks',String(j).padStart(4,'0')),{data:parts[j],index:j});await batch.commit();}
+  await updateDoc(ref,{status:'READY',completedAt:serverTimestamp()});
+  await runTransaction(db,async tx=>{const main=doc(db,'sgcLibrary',item.id);const snap=await tx.get(main);if(!snap.exists()||String(snap.data().version)!==version)throw Error('La edición cambió durante la carga.');tx.update(main,{activePdfId:revId,pdfSignatureState:'SIGNED',referenceFileName:file.name,updatedBy:uid,updatedAt:serverTimestamp()});});
+  return revId;
+ }catch(e){throw Error('No se activó el PDF firmado: '+e.message)}
 }
