@@ -228,6 +228,79 @@ service cloud.firestore {
     && request.resource.data.reviewedAt == request.time && request.resource.data.updatedAt == request.time;
    allow delete: if false;
   }
+  // V1.0.91 · Evaluaciones 4.2.1 inmutables, consulta bajo demanda.
+  match /sgcConfidentiality421/{id}{
+   allow get,list: if manager();
+   allow create: if manager() && request.resource.data.keys().hasOnly(['requirementId','checks','evidence','conclusion','createdBy','createdAt']) && request.resource.data.requirementId=='4.2.1' && request.resource.data.createdBy==request.auth.uid && request.resource.data.createdAt==request.time && request.resource.data.checks is map && request.resource.data.checks.keys().hasAll(['agreement','scope','notice','exceptions']) && request.resource.data.checks.keys().hasOnly(['agreement','scope','notice','exceptions']) && request.resource.data.checks.values().hasOnly(['PENDIENTE','VERIFICADO','ATENCION']) && request.resource.data.evidence is string && request.resource.data.evidence.size()>0 && request.resource.data.evidence.size()<=2000 && request.resource.data.conclusion is string && request.resource.data.conclusion.size()>0 && request.resource.data.conclusion.size()<=2000;
+   allow update,delete: if false;
+  }
+  // V1.0.97 — 4.2.2: control simplificado + compatibilidad historica.
+  match /sgcConfidentiality422/{id}{
+   allow get,list: if manager();
+   allow create: if manager()
+    && request.resource.data.requirementId == '4.2.2'
+    && request.resource.data.createdBy == request.auth.uid
+    && request.resource.data.createdAt == request.time
+    && request.resource.data.evidence is string
+    && request.resource.data.evidence.size() > 0
+    && request.resource.data.evidence.size() <= 2000
+    && request.resource.data.conclusion is string
+    && request.resource.data.conclusion.size() > 0
+    && request.resource.data.conclusion.size() <= 2000
+    && (
+      // V1.0.96: nombres exactos enviados por el formulario.
+      (request.resource.data.keys().hasOnly(['requirementId','evaluationType','controlStatus','evidence','conclusion','createdBy','createdAt'])
+       && request.resource.data.keys().hasAll(['requirementId','evaluationType','controlStatus','evidence','conclusion','createdBy','createdAt'])
+       && request.resource.data.evaluationType == 'CONTROL_APLICACION'
+       && request.resource.data.controlStatus in ['PENDIENTE','VERIFICADO','ATENCION','NO_APLICA'])
+      ||
+      // V1.0.95: formulario historico de cuatro criterios.
+      (request.resource.data.keys().hasOnly(['requirementId','checks','evidence','conclusion','createdBy','createdAt'])
+       && request.resource.data.keys().hasAll(['requirementId','checks','evidence','conclusion','createdBy','createdAt'])
+       && request.resource.data.checks is map
+       && request.resource.data.checks.keys().hasAll(['basis','scope','notice','exception'])
+       && request.resource.data.checks.keys().hasOnly(['basis','scope','notice','exception'])
+       && request.resource.data.checks.values().hasOnly(['PENDIENTE','VERIFICADO','ATENCION','NO_APLICA']))
+    );
+   allow update,delete: if false;
+  }
+  match /sgcConfidentiality422Disclosures/{id}{
+   allow get,list: if manager();
+   allow create: if manager() && request.resource.data.keys().hasOnly(['requirementId','date','client','recipient','information','basis','reference','notice','exception','status','createdBy','createdAt']) && request.resource.data.requirementId=='4.2.2' && request.resource.data.createdBy==request.auth.uid && request.resource.data.createdAt==request.time && request.resource.data.date is string && request.resource.data.date.size()==10 && request.resource.data.client is string && request.resource.data.client.size()>0 && request.resource.data.client.size()<=200 && request.resource.data.recipient is string && request.resource.data.recipient.size()>0 && request.resource.data.recipient.size()<=200 && request.resource.data.information is string && request.resource.data.information.size()>0 && request.resource.data.information.size()<=1000 && request.resource.data.basis in ['LEGAL','CONTRACTUAL'] && request.resource.data.reference is string && request.resource.data.reference.size()>0 && request.resource.data.reference.size()<=1000 && request.resource.data.notice in ['NOTIFICADA','PENDIENTE','PROHIBIDA'] && request.resource.data.exception is string && request.resource.data.exception.size()<=1000 && (request.resource.data.notice!='PROHIBIDA' || request.resource.data.exception.size()>0) && request.resource.data.status in ['REGISTRADA','REQUIERE_ATENCION'];
+   allow update,delete: if false;
+  }
+  // V1.0.98 — 4.2.3: controles y casos inmutables; solo ADMIN/CALIDAD.
+  match /sgcConfidentiality423/{id}{
+   allow get,list: if manager();
+   allow create: if manager()
+    && request.resource.data.keys().hasOnly(['requirementId','evaluationType','controlStatus','evidence','conclusion','createdBy','createdAt'])
+    && request.resource.data.keys().hasAll(['requirementId','evaluationType','controlStatus','evidence','conclusion','createdBy','createdAt'])
+    && request.resource.data.requirementId=='4.2.3'
+    && request.resource.data.evaluationType=='CONTROL_APLICACION'
+    && request.resource.data.controlStatus in ['PENDIENTE','VERIFICADO','ATENCION','NO_APLICA']
+    && request.resource.data.evidence is string && request.resource.data.evidence.size()>0 && request.resource.data.evidence.size()<=2000
+    && request.resource.data.conclusion is string && request.resource.data.conclusion.size()>0 && request.resource.data.conclusion.size()<=2000
+    && request.resource.data.createdBy==request.auth.uid && request.resource.data.createdAt==request.time;
+   allow update,delete: if false;
+  }
+  match /sgcConfidentiality423Sources/{id}{
+   allow get,list: if manager();
+   allow create: if manager()
+    && request.resource.data.keys().hasOnly(['requirementId','date','client','sourceType','description','protection','authorizationReference','evidence','status','createdBy','createdAt'])
+    && request.resource.data.keys().hasAll(['requirementId','date','client','sourceType','description','protection','authorizationReference','evidence','status','createdBy','createdAt'])
+    && request.resource.data.requirementId=='4.2.3'
+    && request.resource.data.date is string && request.resource.data.date.size()==10
+    && request.resource.data.client is string && request.resource.data.client.size()>0 && request.resource.data.client.size()<=200
+    && request.resource.data.sourceType in ['AUTORIDAD','ORGANISMO','DENUNCIANTE','OTRO']
+    && request.resource.data.description is string && request.resource.data.description.size()>0 && request.resource.data.description.size()<=1000
+    && request.resource.data.protection in ['PROTEGIDA','REVELACION_AUTORIZADA']
+    && request.resource.data.authorizationReference is string && request.resource.data.authorizationReference.size()<=500
+    && (request.resource.data.protection!='REVELACION_AUTORIZADA' || request.resource.data.authorizationReference.size()>0)
+    && request.resource.data.evidence is string && request.resource.data.evidence.size()>0 && request.resource.data.evidence.size()<=500
+    && request.resource.data.status in ['REGISTRADO','REQUIERE_ATENCION','CERRADO']
+    && request.resource.data.createdBy==request.auth.uid && request.resource.data.createdAt==request.time;
+   allow update,delete: if false;
+  }
   match /sgcRecords/{id}{allow get,list:if active();allow create:if manager() && allowedRecord();allow update,delete:if false;}
   // V1.0.37 — Firma presencial: PIN y verificaciones exclusivamente del servidor.
   match /sgcSignatureCredentials/{id}{
