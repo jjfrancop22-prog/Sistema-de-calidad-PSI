@@ -175,3 +175,6 @@
 
 /* 4.2.2 · Formulario compacto ELISA */
 .psi422EventForm{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:15px;padding:16px;background:#f7fafc;border:1px solid #dce8ef;border-radius:12px}.psi422EventForm label{display:grid;gap:5px;font-size:13px;font-weight:600}.psi422EventForm .wide{grid-column:1/-1}.psi422EventForm input,.psi422EventForm select,.psi422EventForm textarea{width:100%;border:1px solid #cfdee7;border-radius:8px;padding:9px;font:inherit;background:white;box-sizing:border-box}@media(max-width:700px){.psi422EventForm{grid-template-columns:1fr}}
+
+/* V1.1.02 — Gestión individual de visitas, estilo ELISA */
+.psiVisitOverlay{position:fixed;inset:0;background:rgba(17,38,60,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px}.psiVisitDialog{width:min(100%,520px);max-height:90vh;overflow:auto;background:white;border-radius:14px;padding:22px;box-shadow:0 20px 65px #0c27483b;color:#173452}.psiVisitDialog h3{margin:0 0 10px}.psiVisitDialog label{display:block;margin:13px 0;font-weight:600}.psiVisitDialog select,.psiVisitDialog input,.psiVisitDialog textarea{display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:10px;border:1px solid #b9d1e5;border-radius:7px;font:inherit}.psiVisitDialog .psi411Btns{margin-top:16px;display:flex;flex-wrap:wrap;gap:8px}

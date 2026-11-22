@@ -307,18 +307,37 @@ service cloud.firestore {
    allow get,list: if manager();
    allow create,delete: if false;
    allow update: if manager()
-    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','responsibleId','responsibleName','authorizedAt','reviewedBy','enteredAt','exitedAt'])
+    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','responsibleId','responsibleName','authorizerId','authorizerName','authorizedAt','reviewedBy','enteredAt','exitedAt','enteredBy','exitedBy','eventNote'])
     && resource.data.accepted == true
     && ((resource.data.status == 'PENDIENTE' && request.resource.data.status == 'AUTORIZADA'
          && request.resource.data.responsibleId is string && request.resource.data.responsibleId.size()>0
          && request.resource.data.responsibleName is string && request.resource.data.responsibleName.size()>0
+         && request.resource.data.authorizerId is string && request.resource.data.authorizerId.size()>0
+         && request.resource.data.authorizerName is string && request.resource.data.authorizerName.size()>0
          && request.resource.data.reviewedBy == request.auth.uid && request.resource.data.authorizedAt == request.time)
+       || (resource.data.status == 'PENDIENTE' && request.resource.data.status == 'EN_INSTALACIONES'
+         && request.resource.data.responsibleId is string && request.resource.data.responsibleId.size()>0
+         && request.resource.data.responsibleName is string && request.resource.data.responsibleName.size()>0
+         && request.resource.data.authorizerId is string && request.resource.data.authorizerId.size()>0
+         && request.resource.data.authorizerName is string && request.resource.data.authorizerName.size()>0
+         && request.resource.data.reviewedBy == request.auth.uid
+         && request.resource.data.enteredBy == request.auth.uid
+         && request.resource.data.authorizedAt == request.time
+         && request.resource.data.enteredAt is timestamp
+         && request.resource.data.enteredAt <= request.time
+         && request.resource.data.enteredAt >= request.time - duration.value(5, 'm'))
        || (resource.data.status == 'PENDIENTE' && request.resource.data.status == 'NO_AUTORIZADA'
          && request.resource.data.reviewedBy == request.auth.uid)
        || (resource.data.status == 'AUTORIZADA' && request.resource.data.status == 'EN_INSTALACIONES'
-         && request.resource.data.enteredAt == request.time)
+         && request.resource.data.enteredAt is timestamp
+         && request.resource.data.enteredAt <= request.time
+         && request.resource.data.enteredAt >= resource.data.authorizedAt
+         && request.resource.data.enteredBy == request.auth.uid)
        || (resource.data.status == 'EN_INSTALACIONES' && request.resource.data.status == 'FINALIZADA'
-         && request.resource.data.exitedAt == request.time));
+         && request.resource.data.exitedAt is timestamp
+         && request.resource.data.exitedAt <= request.time
+         && request.resource.data.exitedAt >= resource.data.enteredAt
+         && request.resource.data.exitedBy == request.auth.uid));
   }
   match /sgcRecords/{id}{allow get,list:if active();allow create:if manager() && allowedRecord();allow update,delete:if false;}
   // V1.0.37 — Firma presencial: PIN y verificaciones exclusivamente del servidor.
