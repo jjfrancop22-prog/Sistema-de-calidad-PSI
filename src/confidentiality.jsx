@@ -10,7 +10,7 @@ const points=[
  ['4.2.3','Información de terceros','Protección de la identidad de quien proporciona información sobre un cliente y tratamiento confidencial de esa información.','Control de origen, acceso y reserva de identidad.'],
  ['4.2.4','Obligaciones del personal','Confidencialidad del personal, comités, contratistas, organismos externos y personas que actúen en nombre del laboratorio, salvo exigencia legal.','Compromisos aplicables y control de acceso a la información.']
 ];
-export default function Confidentiality({documents=[],onLibrary,onLink,onOpenDocument}){
+export default function Confidentiality({documents=[],onLibrary,onLink,onOpenDocument,canEdit=false}){
  const [active,setActive]=useState('4.2.1'),[search,setSearch]=useState(''),[criteria,setCriteria]=useState(false);
  const current=points.find(p=>p[0]===active);
  const chapter=documents.filter(d=>(d.requirementIds||[]).some(id=>id==='4.2'||/^4\.2\.[1-4](?:$|\.)/.test(id)));

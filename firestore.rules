@@ -7,6 +7,22 @@ service cloud.firestore {
   function manager(){return active() && get(userPath()).data.role in ['ADMIN','CALIDAD'];}
   function allowedRecord(){return request.resource.data.keys().hasOnly(['title','requirementId','createdAt','createdBy','status']) && request.resource.data.keys().hasAll(['title','requirementId','createdAt','createdBy','status']) && request.resource.data.title is string && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 240 && request.resource.data.requirementId is string && request.resource.data.requirementId.size() <= 12 && request.resource.data.createdBy == request.auth.uid && request.resource.data.createdAt == request.time && request.resource.data.status == 'DRAFT';}
   match /users/{uid}{allow get:if signedIn() && (request.auth.uid==uid || manager());allow list:if manager();allow create,update,delete:if false;}
+  // V1.1.18: evaluaciones retiradas del ERP. Histórico protegido y sin nuevas escrituras.
+  match /sgcRequirementEvaluations/{id}{
+   allow get,list: if manager();
+   allow create,update,delete: if false;
+  }
+  match /sgcConsultants/{id}{
+   allow get,list: if active();
+   allow create: if manager() && request.resource.data.keys().hasOnly(['name','identity','position','organization','active','createdBy','createdAt','updatedBy','updatedAt']) && request.resource.data.createdBy==request.auth.uid && request.resource.data.createdAt==request.time && request.resource.data.updatedBy==request.auth.uid && request.resource.data.updatedAt==request.time && request.resource.data.active is bool && request.resource.data.name is string && request.resource.data.name.size()>0 && request.resource.data.name.size()<=160 && request.resource.data.identity is string && request.resource.data.identity.size()>0 && request.resource.data.identity.size()<=35 && request.resource.data.position is string && request.resource.data.position.size()>0 && request.resource.data.position.size()<=120 && request.resource.data.organization is string && request.resource.data.organization.size()>0 && request.resource.data.organization.size()<=160;
+   allow update: if manager() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','identity','position','organization','active','updatedBy','updatedAt']) && request.resource.data.updatedBy==request.auth.uid && request.resource.data.updatedAt==request.time;
+   allow delete: if false;
+  }
+  match /sgcConsultantDeclarations/{id}{
+   allow get,list: if active();
+   allow create: if manager() && request.resource.data.keys().hasOnly(['personId','personName','identity','position','organization','formatCode','formatVersion','conflict','detail','accepted','identityMatched','reviewStatus','createdAt','createdBy']) && request.resource.data.createdBy==request.auth.uid && request.resource.data.createdAt==request.time && request.resource.data.formatCode=='PSI-MC0205' && request.resource.data.formatVersion=='03' && request.resource.data.accepted==true && request.resource.data.identityMatched==true && request.resource.data.conflict in ['SI','NO'] && request.resource.data.personId is string && request.resource.data.personName is string && request.resource.data.detail is string && request.resource.data.detail.size()<=800;
+   allow update,delete: if false;
+  }
   match /sgcPersonnel/{id}{
    allow get,list: if active();
    allow create: if manager() && request.resource.data.keys().hasOnly(['name','identity','position','area','organization','linkType','contract','joined','left','active','mc0201','mc0203','createdAt','createdBy','updatedAt','updatedBy','functions','connections']) && request.resource.data.createdBy==request.auth.uid && request.resource.data.updatedBy==request.auth.uid && request.resource.data.createdAt==request.time && request.resource.data.updatedAt==request.time && request.resource.data.name is string && request.resource.data.name.size()>0 && request.resource.data.name.size()<=160 && request.resource.data.position is string && request.resource.data.area is string && request.resource.data.functions is list && request.resource.data.connections is list;
@@ -308,12 +324,15 @@ service cloud.firestore {
    allow create,delete: if false;
    allow update: if manager()
     && resource.data.accepted == true
-    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','responsibleId','responsibleName','authorizerId','authorizerName','authorizedAt','reviewedBy','enteredAt','exitedAt','enteredBy','exitedBy','eventNote','historicalRecord','historicalAuthorizationDocumented','historicalRecordedAt','historicalRecordedBy'])
+    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','responsibleId','responsibleName','authorizerId','authorizerName','authorizedAt','reviewedBy','enteredAt','exitedAt','enteredBy','exitedBy','eventNote','historicalRecord','historicalAuthorizationDocumented','historicalRecordedAt','historicalRecordedBy','identityConfirmation','identityConfirmedAt','identityConfirmedBy'])
     && ((resource.data.status == 'PENDIENTE' && request.resource.data.status in ['AUTORIZADA','EN_INSTALACIONES']
          && request.resource.data.responsibleId is string && request.resource.data.responsibleId.size()>0
          && request.resource.data.responsibleName is string && request.resource.data.responsibleName.size()>0
          && request.resource.data.authorizerId is string && request.resource.data.authorizerId.size()>0
          && request.resource.data.authorizerName is string && request.resource.data.authorizerName.size()>0
+         && request.resource.data.identityConfirmation == 'CEDULA_COINCIDENTE'
+         && request.resource.data.identityConfirmedAt == request.time
+         && request.resource.data.identityConfirmedBy == request.auth.uid
          && request.resource.data.reviewedBy == request.auth.uid
          && ((request.resource.data.get('historicalRecord',false) == true
              && request.resource.data.historicalRecordedAt == request.time
