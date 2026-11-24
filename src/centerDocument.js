@@ -17,7 +17,7 @@ export async function ensureCenterDraft(data,uid){
    return {created:false,id,document:old};
   }
   const ids=[...new Set([...(data.requirementIds||[]),data.originRequirement].filter(Boolean))];
-  const payload={code,title:String(data.title||'').slice(0,240),version:String(data.version||'01').slice(0,20),responsible:String(data.responsible||'Coordinador de Calidad').slice(0,120),type:data.type||'FORMATO',description:String(data.description||'').slice(0,500),referenceUrl:'',referenceFileName:'',fileStored:false,requirementIds:ids,status:'REGISTERED',createdBy:uid,createdAt:serverTimestamp(),updatedBy:uid,updatedAt:serverTimestamp()};
+  const payload={code,title:String(data.title||'').slice(0,240),version:String(data.version||'01').slice(0,20),responsible:String(data.responsible||'Coordinador de Calidad').slice(0,120),type:data.type||'FORMATO',classification:String(data.classification||'INTERNO').slice(0,30),area:String(data.area||'CALIDAD').slice(0,40),description:String(data.description||'').slice(0,500),referenceUrl:'',referenceFileName:'',fileStored:false,requirementIds:ids,status:'REGISTERED',createdBy:uid,createdAt:serverTimestamp(),updatedBy:uid,updatedAt:serverTimestamp()};
   tx.set(ref,payload);return {created:true,id,document:payload};
  });
 }

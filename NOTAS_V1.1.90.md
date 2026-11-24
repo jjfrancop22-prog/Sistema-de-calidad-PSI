@@ -1,0 +1,1 @@
+V1.1.90 — Comparación orientativa MC1511-02. Totales administrativos y técnicos /25, total /50, empate y pendientes. La selección sigue siendo humana; no cambia reglas Firestore ni registros existentes. Se actualiza vista PDF individual y se diferencia guardar entrevistas de finalizar selección.

@@ -15,3 +15,6 @@ Variables privadas en Netlify: `FIREBASE_SERVICE_ACCOUNT_JSON` con el JSON compl
 Después de desplegar: publicar `firestore.rules` en Firebase, abrir el ERP y comprobar el flujo de registro QR, autorización, ingreso, salida y firma interna.
 
 AVISO: No se ejecutó una compilación completa en este entorno porque no hay caché local de npm y la instalación offline no está disponible. El funcionamiento debe verificarse en Netlify.
+
+
+V1.1.78: En 15.4, MC1507 y MC1517 quedan como referencias futuras no obligatorias. Se preservan los campos históricos existentes, sin generar perfiles o matrices ficticios. Para aplicar la validación de campos opcionales, publicar firestore.rules actualizado.

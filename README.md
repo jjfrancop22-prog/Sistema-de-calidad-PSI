@@ -49,3 +49,13 @@ V1.0.20: numeral 8.3 organizado en 8.3.1 y 8.3.2, tabla de decisiones y reautent
 
 ## V1.1.52 · Nexo 8.3 → 5.7
 En 5.7 > Gestionar difusión, el sistema consulta los documentos aprobados de Biblioteca y muestra una evaluación independiente por edición. Calidad decide si requiere difusión, registra motivo y, en caso afirmativo, prepara el acta PG0204. Para probar guardado debe publicar `firestore.rules` de esta versión. No se envían correos automáticamente. No se realizaron pruebas integradas contra Firebase real.
+
+
+V1.1.78: En 15.4, MC1507 y MC1517 quedan como referencias futuras no obligatorias. Se preservan los campos históricos existentes, sin generar perfiles o matrices ficticios. Para aplicar la validación de campos opcionales, publicar firestore.rules actualizado.
+
+
+### V1.1.80 — 15.4 simplificado
+- En la creación: datos esenciales, detalles técnicos opcionales; estado inicial automático BORRADOR.
+- El tipo ACTUAL/RETROSPECTIVO se determina por la fecha real de necesidad respecto a la fecha local de registro.
+- En registros existentes, «Gestionar» permite cambiar estado y documentar cierre; no se pierden campos históricos.
+- La fecha de registro electrónico y el usuario se conservan con los sellos de Firestore.

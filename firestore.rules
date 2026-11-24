@@ -29,6 +29,101 @@ service cloud.firestore {
    allow update: if manager() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','identity','position','area','organization','linkType','contract','joined','left','active','mc0201','mc0203','updatedAt','updatedBy','functions','connections']) && request.resource.data.updatedBy==request.auth.uid && request.resource.data.updatedAt==request.time && request.resource.data.name is string && request.resource.data.name.size()>0 && request.resource.data.name.size()<=160 && request.resource.data.functions is list && request.resource.data.connections is list;
    allow delete: if false;
   }
+  // V1.1.91 — vínculo único entre selección finalizada y ficha de personal.
+  // No altera entrevistas finalizadas ni permite duplicar un vínculo.
+  match /sgcSelectionPersonnelLinks/{id}{
+   allow get,list: if manager();
+   allow create: if manager()
+    && request.resource.data.keys().hasOnly(['processId','candidateId','candidateName','personId','personName','createdBy','createdAt'])
+    && request.resource.data.processId == id
+    && request.resource.data.createdBy == request.auth.uid
+    && request.resource.data.createdAt == request.time
+    && request.resource.data.candidateId is string && request.resource.data.candidateId.size()>0
+    && request.resource.data.personId is string && request.resource.data.personId.size()>0
+    && request.resource.data.personName is string && request.resource.data.personName.size()>0
+    && exists(/databases/$(database)/documents/sgcSelectionProcesses/$(id))
+    && get(/databases/$(database)/documents/sgcSelectionProcesses/$(id)).data.status == 'FINALIZADO'
+    && exists(/databases/$(database)/documents/sgcSelectionSignatures/$(id))
+    && existsAfter(/databases/$(database)/documents/sgcPersonnel/$(request.resource.data.personId))
+    && get(/databases/$(database)/documents/sgcSelectionProcesses/$(id)).data.selectedCandidateId == request.resource.data.candidateId;
+   allow update,delete: if false;
+  }
+  // V1.1.76 — 15.4 Necesidades de personal. Registros operativos; no son autorizaciones.
+  // V1.1.88 — MC1502-03: un CV por persona del maestro; sin duplicar fichas.
+  match /sgcPersonnelCV/{id}{
+   allow get,list: if manager();
+   allow create: if manager() && exists(/databases/$(database)/documents/sgcPersonnel/$(id))
+    && request.resource.data.personId==id
+    && request.resource.data.formatCode=='PSI-MC1502' && request.resource.data.formatVersion=='03'
+    && request.resource.data.updatedBy==request.auth.uid && request.resource.data.updatedAt==request.time
+    && request.resource.data.status in ['BORRADOR','COMPLETADO']
+    && request.resource.data.degrees is list && request.resource.data.degrees.size()<=40
+    && request.resource.data.otherDegrees is list && request.resource.data.otherDegrees.size()<=40
+    && request.resource.data.languages is list && request.resource.data.languages.size()<=30
+    && request.resource.data.jobs is list && request.resource.data.jobs.size()<=60
+    && request.resource.data.internalHistory is list && request.resource.data.internalHistory.size()<=60
+    && request.resource.data.courses is list && request.resource.data.courses.size()<=100
+    && request.resource.data.publications is list && request.resource.data.publications.size()<=40;
+   allow update: if manager() && resource.data.personId==id
+    && request.resource.data.personId==id && request.resource.data.formatCode=='PSI-MC1502'
+    && request.resource.data.formatVersion=='03' && request.resource.data.updatedBy==request.auth.uid
+    && request.resource.data.updatedAt==request.time && request.resource.data.status in ['BORRADOR','COMPLETADO']
+    && request.resource.data.degrees is list && request.resource.data.degrees.size()<=40
+    && request.resource.data.otherDegrees is list && request.resource.data.otherDegrees.size()<=40
+    && request.resource.data.languages is list && request.resource.data.languages.size()<=30
+    && request.resource.data.jobs is list && request.resource.data.jobs.size()<=60
+    && request.resource.data.internalHistory is list && request.resource.data.internalHistory.size()<=60
+    && request.resource.data.courses is list && request.resource.data.courses.size()<=100
+    && request.resource.data.publications is list && request.resource.data.publications.size()<=40;
+   allow delete: if false;
+  }
+  match /sgcPersonnelNeeds/{id}{
+   allow get,list: if active();
+   allow create: if manager() && request.resource.data.keys().hasOnly(['needDate','registrationMode','linkedHireId','linkedHireName','historicalEvidence','area','position','reason','justification','activities','profileReference','requirements','coverage','personId','personName','assessment','actions','decisionNote','status','procedure','createdAt','createdBy','updatedAt','updatedBy']) && request.resource.data.createdBy==request.auth.uid && request.resource.data.updatedBy==request.auth.uid && request.resource.data.createdAt==request.time && request.resource.data.updatedAt==request.time && request.resource.data.procedure=='MC-CAP15-ED29-15.4' && request.resource.data.status in ['BORRADOR','EN_REVISION','EN_GESTION','CERRADA'] && request.resource.data.area is string && request.resource.data.area.size()>0 && request.resource.data.area.size()<=160 && request.resource.data.position is string && request.resource.data.position.size()>0 && request.resource.data.position.size()<=160 && request.resource.data.justification is string && request.resource.data.justification.size()>0 && request.resource.data.justification.size()<=1200 && request.resource.data.activities is string && request.resource.data.activities.size()<=1200 && request.resource.data.requirements is string && request.resource.data.requirements.size()<=1200 && request.resource.data.profileReference is string && request.resource.data.profileReference.size()<=160;
+   allow update: if manager() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['needDate','registrationMode','linkedHireId','linkedHireName','historicalEvidence','area','position','reason','justification','activities','profileReference','requirements','coverage','personId','personName','assessment','actions','decisionNote','status','updatedAt','updatedBy']) && request.resource.data.updatedBy==request.auth.uid && request.resource.data.updatedAt==request.time && resource.data.status!='CERRADA' && request.resource.data.status in ['BORRADOR','EN_REVISION','EN_GESTION','CERRADA'] && request.resource.data.area is string && request.resource.data.area.size()>0 && request.resource.data.area.size()<=160 && request.resource.data.position is string && request.resource.data.position.size()>0 && request.resource.data.position.size()<=160 && request.resource.data.justification is string && request.resource.data.justification.size()>0 && request.resource.data.justification.size()<=1200 && request.resource.data.activities is string && request.resource.data.activities.size()<=1200 && request.resource.data.requirements is string && request.resource.data.requirements.size()<=1200 && request.resource.data.profileReference is string && request.resource.data.profileReference.size()<=160;
+   allow delete: if false;
+  }
+  // V1.1.81 — Selección 15.5 / PSI-MC1511-02. Sin eliminación ni edición de procesos finalizados.
+  // V1.1.85 — Evidencias individuales MC1511: instantánea inmutable por candidato y proceso.
+  // Contiene información laboral sensible: acceso exclusivo ADMIN/CALIDAD.
+  // Firma MC1511: escritura exclusiva de Netlify Function; lectura de constancias por responsables.
+  match /sgcSelectionSignatures/{id}{
+   allow get: if manager();
+   allow list,create,update,delete: if false;
+  }
+  match /sgcSelectionEvidence/{id}{
+   allow get,list: if manager();
+   allow create: if manager()
+    && request.resource.data.keys().hasOnly(['processId','candidateId','candidateName','formatCode','formatVersion','record','createdBy','createdAt'])
+    && request.resource.data.processId is string && request.resource.data.processId.size()>0
+    && request.resource.data.candidateId is string && request.resource.data.candidateId.size()>0
+    && id == request.resource.data.processId + '_' + request.resource.data.candidateId
+    && exists(/databases/$(database)/documents/sgcSelectionProcesses/$(request.resource.data.processId))
+    && request.resource.data.candidateName is string && request.resource.data.candidateName.size()>0 && request.resource.data.candidateName.size()<=160
+    && request.resource.data.formatCode=='PSI-MC1511' && request.resource.data.formatVersion=='02'
+    && request.resource.data.record is map
+    && request.resource.data.createdBy==request.auth.uid && request.resource.data.createdAt==request.time;
+   allow update,delete: if false;
+  }
+  match /sgcSelectionProcesses/{id}{
+   allow get,list: if manager();
+   allow create: if manager()
+    && request.resource.data.keys().hasOnly(['needId','area','position','status','historical','candidates','decisionBy','decisionDate','decisionNote','selectedCandidateId','formatCode','formatVersion','procedure','updatedBy','updatedAt','createdBy','createdAt'])
+    && request.resource.data.createdBy==request.auth.uid && request.resource.data.updatedBy==request.auth.uid
+    && request.resource.data.createdAt==request.time && request.resource.data.updatedAt==request.time
+    && request.resource.data.formatCode=='PSI-MC1511' && request.resource.data.formatVersion=='02'
+    && request.resource.data.procedure=='15.5' && request.resource.data.candidates is list
+    && request.resource.data.candidates.size()<=30 && request.resource.data.position is string
+    && request.resource.data.position.size()>0 && request.resource.data.position.size()<=160
+    && request.resource.data.area is string && request.resource.data.area.size()>0
+    && request.resource.data.area.size()<=160 && request.resource.data.status in ['ABIERTO','FINALIZADO'];
+   allow update: if manager() && resource.data.status!='FINALIZADO'
+    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['needId','area','position','status','historical','candidates','decisionBy','decisionDate','decisionNote','selectedCandidateId','updatedBy','updatedAt'])
+    && request.resource.data.updatedBy==request.auth.uid && request.resource.data.updatedAt==request.time
+    && request.resource.data.status in ['ABIERTO','FINALIZADO'] && request.resource.data.candidates is list
+    && request.resource.data.candidates.size()<=30;
+   allow delete: if false;
+  }
   match /sgcPersonnelLinks/{id}{
    allow get,list: if active();
    allow create: if manager() && request.resource.data.keys().hasOnly(['personId','personName','personPosition','targetType','targetId','targetKey','targetLabel','requirementId','role','active','createdBy','createdAt','updatedBy','updatedAt']) && request.resource.data.keys().hasAll(['personId','personName','personPosition','targetType','targetId','targetKey','targetLabel','requirementId','role','active','createdBy','createdAt','updatedBy','updatedAt']) && request.resource.data.personId is string && request.resource.data.personId.size()>0 && request.resource.data.targetId is string && request.resource.data.targetId.size()>0 && request.resource.data.targetType in ['LIBRARY','REQUIREMENT'] && request.resource.data.targetKey == request.resource.data.targetType + ':' + request.resource.data.targetId && request.resource.data.personName is string && request.resource.data.personName.size()<=160 && request.resource.data.targetLabel is string && request.resource.data.targetLabel.size()<=240 && request.resource.data.role in ['RESPONSABLE','ELABORADOR','REVISOR','APROBADOR','RESPONSABLE DE ACTIVIDAD','RESPONSABLE DE EVIDENCIA','PRINCIPAL','CORRESPONSABLE','RECURSOS','DETECCION','ACCIONES','INFORMACION','SEGUIMIENTO','EFICACIA_TECNICA'] && request.resource.data.active==true && request.resource.data.createdBy==request.auth.uid && request.resource.data.updatedBy==request.auth.uid && request.resource.data.createdAt==request.time && request.resource.data.updatedAt==request.time;
