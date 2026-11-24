@@ -45,3 +45,7 @@ El expediente PG0201 ofrece vista previa tabular del Excel generado por ERP, con
 
 
 V1.0.20: numeral 8.3 organizado en 8.3.1 y 8.3.2, tabla de decisiones y reautenticación por contraseña antes de aprobar. Publicar firestore.rules. Firma electrónica INTERNA, no firma digital certificada P12. Nunca subir certificados P12 al proyecto ni a Firebase.
+
+
+## V1.1.52 · Nexo 8.3 → 5.7
+En 5.7 > Gestionar difusión, el sistema consulta los documentos aprobados de Biblioteca y muestra una evaluación independiente por edición. Calidad decide si requiere difusión, registra motivo y, en caso afirmativo, prepara el acta PG0204. Para probar guardado debe publicar `firestore.rules` de esta versión. No se envían correos automáticamente. No se realizaron pruebas integradas contra Firebase real.

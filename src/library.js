@@ -31,6 +31,15 @@ export function libraryCodeId(code){return norm(code).trim().replace(/[^a-z0-9_-
 export function watchLibrary(callback,error){return onSnapshot(query(collection(db,'sgcLibrary'),limit(50)),s=>callback(s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.code).localeCompare(String(b.code)))),error);}
 export function watchLibraryRequirement(id,callback,error){return onSnapshot(query(collection(db,'sgcLibrary'),where('requirementIds','array-contains',id),limit(30)),s=>callback(s.docs.map(d=>({id:d.id,...d.data()}))),error);}
 export async function createLibraryEntry(data,uid){const id=libraryCodeId(data.code);if(!id)throw Error('Código inválido');const ref=doc(db,'sgcLibrary',id);await runTransaction(db,async tx=>{const old=await tx.get(ref);if(old.exists())throw Error('Este código ya está registrado en la biblioteca. Utilice el documento existente.');tx.set(ref,{...data,requirementIds:data.requirementIds||[],status:'REGISTERED',createdBy:uid,createdAt:serverTimestamp(),updatedBy:uid,updatedAt:serverTimestamp()});});}
+// Metadata-only classification: preserves PDF versions, approvals and original identity.
+export async function updateLibraryClassification(item,metadata,uid){
+ const ref=doc(db,'sgcLibrary',item.id);
+ await runTransaction(db,async tx=>{
+  const snap=await tx.get(ref);if(!snap.exists())throw Error('Documento no encontrado');
+  if(snap.data().code!==item.code)throw Error('El expediente cambió. Actualice la consulta.');
+  tx.update(ref,{type:metadata.type,classification:metadata.classification,area:metadata.area,updatedBy:uid,updatedAt:serverTimestamp()});
+ });
+}
 export async function updateLibraryLinks(item,requirementIds,uid){const ref=doc(db,'sgcLibrary',item.id);await runTransaction(db,async tx=>{const s=await tx.get(ref);if(!s.exists())throw Error('Documento no encontrado');tx.update(ref,{requirementIds,updatedBy:uid,updatedAt:serverTimestamp()});});}
 export async function readLocalReference(file){if(!file)return '';if(file.size>5*1024*1024)throw Error('Para analizar texto, seleccione un archivo menor a 5 MB.');if(/\.(txt|md|csv)$/i.test(file.name))return (await file.text()).slice(0,30000);return '';}
 
