@@ -1,7 +1,7 @@
 {
   "name": "psi-sgc-nextgen",
   "private": true,
-  "version": "1.2.27",
+  "version": "1.2.30",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
@@ -15,7 +15,8 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "exceljs": "^4.4.0",
-    "firebase-admin": "^13.4.0"
+    "firebase-admin": "^13.4.0",
+    "qrcode-generator": "^1.4.4"
   },
   "devDependencies": {
     "vite": "^6.3.5"

@@ -1,3 +1,4 @@
+import {feiData} from "./feiReceipt.js";
 // PSI-MC0206 V04: PDF A4 institucional con logo y texto Unicode.
 // PDF maestro y registros individuales comparten el mismo diseño; sin alterar registros Firestore.
 import {mc0206Questions,mc0206Commitment} from './conflictContent.js';
@@ -69,6 +70,7 @@ function drawDocument(record,person,logo){
  wrap(mc0206Commitment,M+7,9.2,RIGHT-M-14,14.2);y+=13;
  if(record){heading('CONSTANCIA DE REGISTRO INTERNO');wrap('Aceptación del compromiso: SÍ',M+6,9.3,RIGHT-M-12,14,true);wrap('Fecha del registro: '+pdfDate(record.createdAt),M+6,9.1,RIGHT-M-12,14);wrap('Identificador: '+(record.id||`${record.year}_${record.personId}`),M+6,8.8,RIGHT-M-12,14);wrap('Usuario que registró (UID): '+(record.createdBy||'No disponible'),M+6,8.1,RIGHT-M-12,13);wrap(record.method==='CEDULA_PIN_REMOTA'?'Firma interna remota mediante cédula y PIN. No equivale a firma electrónica certificada.':'Constancia de registro interno. No equivale a firma electrónica certificada ni acredita autenticación personal mediante PIN.',M+6,8.1,RIGHT-M-12,12.5);y+=12;heading('EVALUACIÓN DE CALIDAD');wrap('Estado: '+(record.reviewStatus||'Sin evaluar').replaceAll('_',' '),M+6,9.1,RIGHT-M-12,14);if(record.assessment)wrap('Análisis: '+record.assessment,M+6,9,RIGHT-M-12,14);if(record.measures)wrap('Medidas: '+record.measures,M+6,9,RIGHT-M-12,14)}
  else{ensure(65);box(M,y-8,RIGHT-M,55,'#f5f9fc',BORDER);text('☐ Declaro que mis respuestas son veraces y acepto el compromiso.',M+9,y+9,9.2);text('Firma: ___________________________     Fecha: __________________',M+9,y+31,9);y+=65}
+ const fei=feiData(record,'conflicts');if(fei){ensure(125);heading('FEI-PSI · FIRMA ELECTRÓNICA INTERNA');const top=y;const n=fei.qr.getModuleCount(),unit=72/(n+8);box(RIGHT-80,top-8,80,80,'#fff',null);for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(fei.qr.isDark(r,c))box(RIGHT-76+(c+4)*unit,top-4+(r+4)*unit,unit,unit,'#000',null);wrap(fei.name+' · '+fei.position,M+6,9,RIGHT-M-100,13);wrap(fei.date+' (Ecuador) · Cédula y PIN',M+6,9,RIGHT-M-100,13);wrap('Registro: '+fei.id,M+6,8,RIGHT-M-100,12);wrap('Verificación restringida del registro. No certifica el PDF.',M+6,8,RIGHT-M-100,12);y=Math.max(y,top+82);}
  savePage();
  return pages;
 }
