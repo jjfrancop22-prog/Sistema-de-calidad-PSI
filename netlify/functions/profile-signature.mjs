@@ -19,7 +19,7 @@ export async function handler(event){
   const position=String(signer.data().position||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
   if(!/(gerente|president|representante legal)/.test(position))return reply(403,{error:'La aprobación del perfil requiere un cargo de Gerencia, Presidencia o Representación Legal'});
   const credentialRef=db.doc(`sgcSignatureCredentials/${signerId}`);let invalid=false,result=null,pinState=null;
-  const state=c=>({enabled:!!c?.enabled,remainingAttempts:Math.max(0,5-(c?.failed||0)),retryAfterMs:Math.max(0,(c?.lockedUntil?.toMillis()||0)-Date.now())});
+  const state=c=>({enabled:!!c?.enabled,remainingAttempts:c?.lockedUntil?.toMillis()>Date.now()?0:Math.max(0,5-(c?.failed||0)),retryAfterMs:Math.max(0,(c?.lockedUntil?.toMillis()||0)-Date.now())});
   if(data.action==='pin-status')return reply(200,{ok:true,...state((await credentialRef.get()).data())});
   await db.runTransaction(async tx=>{
    invalid=false;result=null;pinState=null;
