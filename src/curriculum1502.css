@@ -1,1 +1,50 @@
 .cv1502{display:grid;gap:13px}.cv1502Bar,.cv1502Actions{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#f3f8fc;border:1px solid #d7e7f3;border-radius:12px;padding:12px}.cv1502Bar small,.cv1502Identity small{display:block;color:#617f96;margin-top:4px}.cv1502Person{max-width:630px}.cv1502Person select{width:100%}.cv1502Identity{display:grid;gap:3px;border-left:4px solid #2178ae;background:#f1f8fc;padding:13px;border-radius:8px}.cv1502Grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.cv1502Grid label,.cv1502Row label{display:grid;gap:5px;font-weight:600;color:#325c79}.cv1502Grid input,.cv1502Grid textarea,.cv1502Grid select,.cv1502Row input,.cv1502Row select{width:100%;box-sizing:border-box}.cv1502Grid .wide{grid-column:1/-1}.cv1502Group{border:1px solid #d3e4f1;border-radius:12px;overflow:hidden}.cv1502Group>summary{cursor:pointer;padding:13px 16px;font-weight:700;background:#f1f7fb;color:#1d5278}.cv1502Group>summary span{float:right;font-weight:400;color:#66849a}.cv1502Rows{padding:14px;display:grid;gap:12px}.cv1502Row{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));align-items:end;gap:10px;border-bottom:1px solid #e0edf5;padding-bottom:12px}.cv1502Message,.cv1502Help{background:#edf6fc;color:#19567d;border-radius:8px;padding:12px}@media(max-width:700px){.cv1502Grid{grid-template-columns:1fr}}
+/* V1.1.93 · Navegación compacta y hoja de vida en ventana ELISA */
+.psi62WorkflowIntro{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;color:#245b7f;font-size:12px}.psi62WorkflowIntro small{color:#66849a}.psi62WorkflowStages{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px!important;margin-bottom:14px}.psi62WorkflowStages button{width:100%;min-height:42px;text-align:center;white-space:normal;line-height:1.2;padding:10px 8px!important}.psi62CvLanding{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:22px;border:1px solid #d2e5f4;border-radius:12px;background:#f0f7fc}.psi62CvLanding h4{margin:5px 0;font-size:19px;color:#153f5d}.psi62CvLanding p{margin:0;color:#587891}.psi62CvOverlay{z-index:1100!important;align-items:center!important;justify-content:center!important;padding:18px!important}.psi62CvDialog{width:min(1020px,96vw)!important;max-width:1020px!important;max-height:calc(100dvh - 36px)!important;overflow-y:auto!important;overscroll-behavior:contain;padding:24px!important;border-radius:20px!important;background:#fff}.psi62CvDialogHeader{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#f1f7fb;border:1px solid #d6e7f3;padding:16px;border-radius:12px;margin-bottom:16px}.psi62CvDialogHeader h3{margin:4px 0;font-size:22px;color:#194d71}.psi62CvDialogHeader small{color:#67849a}.psi62CvDialog .cv1502Bar{padding:10px}.psi62CvDialog .cv1502Person{max-width:none}.psi62CvDialog .cv1502Person select{max-width:100%}.psi62CvDialog .cv1502Group>summary{padding:12px 14px}@media(max-width:700px){.psi62WorkflowStages{grid-template-columns:1fr}.psi62CvLanding{flex-direction:column;align-items:stretch}.psi62CvDialog{padding:12px!important;max-height:calc(100dvh - 16px)!important}.psi62CvOverlay{padding:8px!important}}
+/* V1.1.95: plantilla en menú principal, registro en diálogo compacto */
+.psi62CvModule{display:grid;gap:12px}
+.psi62CvModule .psi62CvLanding{padding:15px 18px}
+.psi62CvModule .psi62CvLanding h4{font-size:16px}
+.psi62CvDialog{padding:18px!important}
+.psi62CvDialogHeader{padding:11px 15px;margin-bottom:10px}
+.psi62CvDialogHeader h3{font-size:19px}
+.psi62CvDialog .cv1502{gap:10px}
+.psi62CvDialog .cv1502Bar{padding:9px 12px}
+.psi62CvDialog .cv1502Identity{padding:10px 12px;gap:2px}
+.psi62CvDialog .cv1502Grid{gap:9px 12px}
+.psi62CvDialog .cv1502Grid input,.psi62CvDialog .cv1502Grid select,.psi62CvDialog .cv1502Grid textarea,.psi62CvDialog .cv1502Row input,.psi62CvDialog .cv1502Row select{border:1px solid #c9ddec;border-radius:8px;background:#fff;padding:9px 11px;min-height:39px;color:#173d58;font:inherit}
+.psi62CvDialog .cv1502Person select{border:1px solid #c9ddec;border-radius:8px;padding:9px 11px;min-height:40px;color:#173d58;background:#fff}
+.psi62CvDialog .cv1502Group>summary{padding:11px 13px}
+.psi62CvDialog .cv1502Actions{position:sticky;bottom:-18px;z-index:2;background:#f3f8fc;box-shadow:0 -4px 12px #eaf1f7}
+@media(max-width:700px){.psi62CvDialog .cv1502Actions{bottom:-12px}.psi62CvModule .psi62CvLanding{padding:12px}}
+/* V1.1.96 · Listado paginado y cursos 5 por página */
+.cv1502List{border:1px solid #d3e4f1;border-radius:12px;overflow:hidden;background:white}
+.cv1502ListHead{display:grid;gap:3px;padding:13px 16px;background:#f0f7fc;color:#1d5278}
+.cv1502ListHead small,.cv1502ListItem small{display:block;color:#68849a;margin-top:3px}
+.cv1502ListItem{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 16px;border-top:1px solid #e1edf5}
+.cv1502Pager{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 14px;background:#f5f9fc;color:#456c86;font-size:13px}
+.cv1502Pager>div{display:flex;align-items:center;gap:9px}
+.cv1502Pager button{padding:7px 10px!important}
+@media(max-width:650px){.cv1502ListItem{align-items:flex-start}.cv1502Pager{justify-content:center}}
+/* V1.1.97 · Control individual inteligente, sin duplicación de fichas */
+.cv1502SmartSummary{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#f3f8fc;border:1px solid #d3e4f1;border-radius:11px;padding:10px 12px;color:#315f80;font-size:13px}
+.cv1502SmartSummary span{background:white;border:1px solid #d8e7f1;border-radius:8px;padding:7px 10px}
+.cv1502SmartSummary small{color:#68849a}
+.cv1502Tools{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.cv1502Tools>input{flex:1;min-width:200px;max-width:480px;padding:10px 12px;border:1px solid #cbdfea;border-radius:9px}
+.cv1502Filters,.cv1502ItemActions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.cv1502Filters button,.cv1502ItemActions button{padding:8px 11px!important;font-size:13px}
+.cv1502Badge{font-size:12px;font-weight:700;padding:6px 9px;border-radius:8px;white-space:nowrap}
+.cv1502Badge.done{background:#e2f5eb;color:#176846}.cv1502Badge.pending{background:#fff2d9;color:#8d600c}.cv1502Badge.unknown{background:#eaf0f6;color:#526e83}
+.cv1502Empty{padding:20px;text-align:center;color:#66849a}
+@media(max-width:720px){.cv1502ListItem{flex-direction:column;align-items:stretch}.cv1502ItemActions{justify-content:flex-start}}
+
+/* V1.2.00 · Encabezado de registros compacto, sin acción redundante */
+.psi62CvModule .psi62CvLanding{padding:12px 16px;gap:12px;background:#f3f8fc}
+.psi62CvModule .psi62CvLanding h4{font-size:16px;margin:3px 0}
+.psi62CvModule .psi62CvLanding p{font-size:12px}
+.psi62CvLandingHint{display:block;max-width:310px;color:#557a96;font-size:12px;line-height:1.45;text-align:right}
+@media(max-width:700px){.psi62CvLandingHint{text-align:left;max-width:none}}
+
+/* V1.2.05 · Navegación compacta uniforme de competencia */
+.psi62WorkflowStages{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:7px!important}.psi62WorkflowStages button{min-height:36px!important;padding:7px 8px!important;font-size:12px!important;font-weight:650!important;line-height:1.15!important;border-radius:8px!important}@media(max-width:850px){.psi62WorkflowStages{grid-template-columns:repeat(2,minmax(0,1fr))!important}}@media(max-width:470px){.psi62WorkflowStages{grid-template-columns:1fr!important}}

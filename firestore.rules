@@ -50,6 +50,35 @@ service cloud.firestore {
   }
   // V1.1.76 — 15.4 Necesidades de personal. Registros operativos; no son autorizaciones.
   // V1.1.88 — MC1502-03: un CV por persona del maestro; sin duplicar fichas.
+  // MC1509 V03: registro de inducción por trabajador, separado de la plantilla controlada.
+  match /sgcPersonnelInductions/{id}{
+   allow get,list: if manager();
+   allow create,update: if manager()
+    && exists(/databases/$(database)/documents/sgcPersonnel/$(id))
+    && request.resource.data.personId==id
+    && request.resource.data.formatCode=='PSI-MC1509'
+    && request.resource.data.formatVersion=='03'
+    && request.resource.data.updatedBy==request.auth.uid
+    && request.resource.data.updatedAt==request.time
+    && request.resource.data.status in ['BORRADOR','EN_PROCESO','TEMAS_COMPLETADOS']
+    && request.resource.data.topics is list && request.resource.data.topics.size()==12
+    && request.resource.data.documents is list && request.resource.data.documents.size()==5
+    && request.resource.data.confirmations is list && request.resource.data.confirmations.size()==5;
+   allow delete: if false;
+  }
+  // MC1507-04: perfil institucional por cargo, no por trabajador. Historial en revisiones.
+  match /sgcPositionProfiles/{id}{
+   allow get,list: if manager();
+   allow create,update: if manager()
+    && (!('status' in resource.data) || resource.data.status != 'APROBADO')
+    && request.resource.data.formatCode == 'PSI-MC1507'
+    && request.resource.data.formatVersion == '04'
+    && request.resource.data.updatedBy == request.auth.uid
+    && request.resource.data.updatedAt == request.time
+    && request.resource.data.status in ['BORRADOR','EN_REVISION']
+    && request.resource.data.revisions is list && request.resource.data.revisions.size() <= 40;
+   allow delete: if false;
+  }
   match /sgcPersonnelCV/{id}{
    allow get,list: if manager();
    allow create: if manager() && exists(/databases/$(database)/documents/sgcPersonnel/$(id))
