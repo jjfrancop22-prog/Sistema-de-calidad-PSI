@@ -67,6 +67,13 @@ service cloud.firestore {
    allow delete: if false;
   }
   // MC1507-04: perfil institucional por cargo, no por trabajador. Historial en revisiones.
+  match /sgcSkillsDelegations/{id}{allow read,write:if false;}
+  match /sgcSkills1519/{id}{
+   allow get,list: if manager();
+   allow create: if manager() && request.resource.data.status == 'BORRADOR' && !('approval' in request.resource.data) && request.resource.data.updatedBy == request.auth.uid && request.resource.data.updatedAt == request.time;
+   allow update: if manager() && resource.data.status == 'BORRADOR' && request.resource.data.status == 'BORRADOR' && !('approval' in request.resource.data) && request.resource.data.updatedBy == request.auth.uid && request.resource.data.updatedAt == request.time && request.resource.data.personId == resource.data.personId && request.resource.data.profileId == resource.data.profileId;
+   allow delete: if false;
+  }
   match /sgcPositionProfiles/{id}{
    allow get,list: if manager();
    allow create,update: if manager()
