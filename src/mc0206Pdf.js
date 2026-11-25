@@ -1,13 +1,7 @@
 // PSI-MC0206 V04: PDF A4 institucional con logo y texto Unicode.
 // PDF maestro y registros individuales comparten el mismo diseño; sin alterar registros Firestore.
-export const mc0206Questions=[
- ['Relaciones externas','¿Usted o un miembro de su familia (hasta segundo grado de afinidad o cuarto grado de consanguinidad) mantiene relación laboral, contractual, comercial o de consultoría con clientes, proveedores o competidores de LAB-PSI?'],
- ['Participación en otras entidades','¿Es usted socio, accionista, representante legal o miembro de la junta directiva de alguna entidad (con o sin fines de lucro) que tenga intereses relacionados con los servicios o actividades del laboratorio?'],
- ['Información confidencial','¿Ha compartido, revelado o divulgado información técnica, administrativa o confidencial de LAB-PSI sin autorización formal?'],
- ['Actividades paralelas','¿Desempeña actividades externas (consultoría, asesoría, servicios técnicos o académicos) que puedan interferir o influir en su juicio profesional dentro del laboratorio?'],
- ['Otras situaciones','¿Existe alguna circunstancia adicional que pudiera ser considerada como potencial conflicto de interés no mencionada en las preguntas anteriores?']
-];
-export const mc0206Commitment='Declaro que la información consignada en este formulario es veraz y completa. Me comprometo a informar inmediatamente al Coordinador de Calidad o a la Dirección de LAB-PSI sobre cualquier cambio que pudiera representar un conflicto de interés. Asimismo, reconozco que el incumplimiento de esta declaración puede conllevar acciones disciplinarias o legales, conforme al Sistema de Gestión de la Calidad y la legislación vigente.';
+import {mc0206Questions,mc0206Commitment} from './conflictContent.js';
+export {mc0206Questions,mc0206Commitment};
 const W=595.28,H=841.89,M=39,RIGHT=W-M,BLUE='#175985',DARK='#16324c',PALE='#eaf3f9',BORDER='#d2e2ed';
 const encoder=new TextEncoder();
 const pdfDate=v=>{try{return v?.toDate?.()?.toLocaleString('es-EC')||'No disponible'}catch{return 'No disponible'}};
@@ -73,7 +67,7 @@ function drawDocument(record,person,logo){
  });
  heading('DECLARACIÓN Y COMPROMISO');
  wrap(mc0206Commitment,M+7,9.2,RIGHT-M-14,14.2);y+=13;
- if(record){heading('CONSTANCIA DE REGISTRO INTERNO');wrap('Aceptación del compromiso: SÍ',M+6,9.3,RIGHT-M-12,14,true);wrap('Fecha del registro: '+pdfDate(record.createdAt),M+6,9.1,RIGHT-M-12,14);wrap('Identificador: '+(record.id||`${record.year}_${record.personId}`),M+6,8.8,RIGHT-M-12,14);wrap('Usuario que registró (UID): '+(record.createdBy||'No disponible'),M+6,8.1,RIGHT-M-12,13);wrap('Constancia de registro interno. No equivale a firma electrónica certificada ni acredita autenticación personal mediante PIN.',M+6,8.1,RIGHT-M-12,12.5);y+=12;heading('EVALUACIÓN DE CALIDAD');wrap('Estado: '+(record.reviewStatus||'Sin evaluar').replaceAll('_',' '),M+6,9.1,RIGHT-M-12,14);if(record.assessment)wrap('Análisis: '+record.assessment,M+6,9,RIGHT-M-12,14);if(record.measures)wrap('Medidas: '+record.measures,M+6,9,RIGHT-M-12,14)}
+ if(record){heading('CONSTANCIA DE REGISTRO INTERNO');wrap('Aceptación del compromiso: SÍ',M+6,9.3,RIGHT-M-12,14,true);wrap('Fecha del registro: '+pdfDate(record.createdAt),M+6,9.1,RIGHT-M-12,14);wrap('Identificador: '+(record.id||`${record.year}_${record.personId}`),M+6,8.8,RIGHT-M-12,14);wrap('Usuario que registró (UID): '+(record.createdBy||'No disponible'),M+6,8.1,RIGHT-M-12,13);wrap(record.method==='CEDULA_PIN_REMOTA'?'Firma interna remota mediante cédula y PIN. No equivale a firma electrónica certificada.':'Constancia de registro interno. No equivale a firma electrónica certificada ni acredita autenticación personal mediante PIN.',M+6,8.1,RIGHT-M-12,12.5);y+=12;heading('EVALUACIÓN DE CALIDAD');wrap('Estado: '+(record.reviewStatus||'Sin evaluar').replaceAll('_',' '),M+6,9.1,RIGHT-M-12,14);if(record.assessment)wrap('Análisis: '+record.assessment,M+6,9,RIGHT-M-12,14);if(record.measures)wrap('Medidas: '+record.measures,M+6,9,RIGHT-M-12,14)}
  else{ensure(65);box(M,y-8,RIGHT-M,55,'#f5f9fc',BORDER);text('☐ Declaro que mis respuestas son veraces y acepto el compromiso.',M+9,y+9,9.2);text('Firma: ___________________________     Fecha: __________________',M+9,y+31,9);y+=65}
  savePage();
  return pages;
