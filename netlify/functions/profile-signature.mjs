@@ -20,9 +20,12 @@ export async function handler(event){
   if(!/(gerente|president|representante legal)/.test(position))return reply(403,{error:'La aprobación del perfil requiere un cargo de Gerencia, Presidencia o Representación Legal'});
   const credentialRef=db.doc(`sgcSignatureCredentials/${signerId}`);let invalid=false,result=null;
   await db.runTransaction(async tx=>{
+   invalid=false;result=null;
    const [profile,credential]=await Promise.all([tx.get(ref),tx.get(credentialRef)]);
    const p=profile.data();if(!p||p.status!=='BORRADOR'||p.approval)throw Error('Este perfil ya está aprobado o no admite firma');
-   if(!p.purpose?.trim()||!['education','training','knowledge','skills','experience'].every(k=>p[k]?.trim()))throw Error('Complete los requisitos del perfil antes de aprobar');
+   if(data.revision!==p.revision)throw Error('La revisión cambió. Cierre y vuelva a consultar el perfil antes de firmar');
+   const missing=['purpose','education','training','knowledge','skills','experience'].filter(k=>typeof p[k]!=='string'||!p[k].trim());
+   if(missing.length){const labels={purpose:'Propósito',education:'Educación',training:'Formación',knowledge:'Conocimientos técnicos',skills:'Habilidades',experience:'Experiencia'};throw Error('Complete y guarde: '+missing.map(k=>labels[k]).join(', '))}
    const c=credential.data();if(!c?.enabled)throw Error('El aprobador no tiene PIN configurado');if(c.lockedUntil?.toMillis()>Date.now())throw Error('PIN bloqueado temporalmente');
    const a=Buffer.from(pbkdf2Sync(pin,c.salt,210000,32,'sha256')),b=Buffer.from(c.hash,'hex');
    if(a.length!==b.length||!timingSafeEqual(a,b)){const failed=(c.failed||0)+1;tx.update(credentialRef,{failed:failed>=5?0:failed,lockedUntil:admin.firestore.Timestamp.fromMillis(failed>=5?Date.now()+900000:0)});invalid=true;return}
