@@ -1,0 +1,46 @@
+.fn1508 .fnbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px;background:#edf5f9;border-radius:8px;margin:10px 0}.fnbar button:last-child{margin-left:auto}.fn1508 table{width:100%;border-collapse:collapse;font-size:13px}.fn1508 td,.fn1508 th{text-align:left;padding:9px;border-bottom:1px solid #d5e3ec}.fn1508 th{background:#edf5f9}.fnmodal{width:min(950px,95vw);max-height:90vh;overflow:auto}.fnmodal nav{display:flex;gap:5px;flex-wrap:wrap;margin:12px 0}.fnmodal fieldset{border:0;padding:12px;background:#f3f8fb;border-radius:8px}.fnmodal label{display:block;font-weight:600;margin:8px 0}.fnmodal input,.fnmodal textarea{display:block;width:100%;box-sizing:border-box;margin-top:5px}.fnmodal h3{margin:4px 0}
+/* Scoped ELISA layout; overrides the shared 610px document dialog. */
+.fn1508 .docDialog.fnmodal{width:min(1000px,calc(100vw - 40px));max-width:1000px;box-sizing:border-box;padding:22px;max-height:90vh;overflow:auto;color:#183d55;font-size:14px}
+.fn1508 .fnmodal .fnbar{margin:0 0 14px;padding:12px 16px;background:#f0f6fa}
+.fn1508 .fnmodal h3{font-size:18px;margin:4px 0;font-weight:700}
+.fn1508 .fnmodal nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin:0 0 12px}
+.fn1508 .fnmodal nav button{font-size:12px;line-height:1.3;min-height:44px;padding:8px 6px;white-space:normal;border:1px solid #d3e3ee;border-radius:7px;background:#eaf2f7;color:#205477}
+.fn1508 .fnmodal nav button.fnactive{background:#176a98;color:white;border-color:#176a98}
+.fn1508 .fnmodal fieldset{min-width:0;margin:0;padding:16px;background:#f5f9fc;border:1px solid #e1ebf2}
+.fn1508 .fnmodal label{font-size:13px;margin:0 0 14px;color:#25475d}
+.fn1508 .fnmodal input,.fn1508 .fnmodal textarea,.fn1508 .fnsearch{font:inherit;font-weight:400;color:#183d55;background:#fff;border:1px solid #c8dbe8;border-radius:7px;padding:10px 12px;outline:none;box-sizing:border-box}
+.fn1508 .fnmodal textarea{min-height:90px;resize:vertical;line-height:1.5}
+.fn1508 .fnmodal textarea[readonly]{background:#edf3f7;color:#405c70}
+.fn1508 .fnmodal input:focus,.fn1508 .fnmodal textarea:focus,.fn1508 .fnsearch:focus{border-color:#2676a4;box-shadow:0 0 0 3px #2676a41a}
+.fn1508 .fnsearch{width:min(440px,100%);margin:8px 0 12px}
+.fn1508 .fnstep{font-size:12px;color:#58758a;margin:0 0 10px}
+.fn1508 .fnidentity{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.fn1508 .fnidentity div{background:white;border:1px solid #dce8ef;border-radius:7px;padding:12px;overflow-wrap:anywhere}
+.fn1508 .fnidentity small,.fn1508 .fnidentity strong{display:block}.fn1508 .fnidentity small{color:#58758a;margin-bottom:5px}
+.fn1508 .fngrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.fn1508 .fnhint{color:#58758a;line-height:1.5}
+.fn1508 .fnmodal .fnfooter{margin:14px 0 0;background:white;border-top:1px solid #dce8ef;border-radius:0;padding:12px 0 0;gap:8px}.fn1508 .fnmodal button{font-size:13px}
+@media(max-width:700px){.fn1508 .docDialog.fnmodal{padding:14px;width:100%}.fn1508 .fnmodal nav{grid-template-columns:repeat(2,minmax(0,1fr))}.fn1508 .fnidentity,.fn1508 .fngrid{grid-template-columns:1fr}.fn1508 .fnmodal .fnfooter button{margin-left:0}}
+.fn1508 .docDialog.fnmodal{display:flex;flex-direction:column;overflow:hidden;max-height:calc(100dvh - 40px);min-height:0}
+.fn1508 .fnmodal>fieldset{overflow:auto;min-height:0;flex:1 1 auto}
+.fn1508 .fnmodal>nav,.fn1508 .fnmodal>.fnbar,.fn1508 .fnstep{flex-shrink:0}
+.fn1508 .fnmodal .fnlist{margin:10px 0 16px;font-size:13px}
+.fn1508 .fnlistrow{display:grid;grid-template-columns:24px minmax(0,1fr) 34px;gap:7px;align-items:center;margin:6px 0}
+.fn1508 .fnlistrow textarea{min-height:42px;margin:0;padding:8px;resize:vertical}
+.fn1508 .fnlistrow button{padding:6px}
+.fn1508 .fnmodal select{display:block;width:100%;padding:9px;border:1px solid #c8dbe8;border-radius:7px;background:white;color:#183d55}
+.fn1508 .fnmodal textarea{min-height:64px}
+.fn1508 .fnmodal .fnlistrow textarea{min-height:42px}
+
+/* MC1508: scroll belongs to a normal block, not the fieldset (browser-specific sizing). */
+.fn1508 .docDialog.fnmodal{max-height:90vh;max-height:90dvh;overflow:hidden;min-height:0}
+.fn1508 .fnmodal>.fnscroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding-right:6px;scrollbar-gutter:stable}
+.fn1508 .fnmodal .fnscroll>fieldset{display:block;min-width:0;width:100%;box-sizing:border-box;overflow:visible}
+.fn1508 .fnmodal .fnlisthead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.fn1508 .fnmodal .fnlisthead button{padding:5px 10px}
+.fn1508 .fnmodal .fnlistrow{align-items:start}
+.fn1508 .fnmodal .fnlistrow>span,.fn1508 .fnmodal .fnlistrow>button{margin-top:8px}
+.fn1508 .fnmodal textarea{overflow-y:hidden;resize:none}
+.fn1508 .fnmodal .fnstatus{flex:none;margin:6px 0 0;padding:6px 9px;font-size:12px;background:#edf5f9;border-radius:6px;overflow-wrap:anywhere}
+.fn1508 .fnmodal>.fnfooter{flex:none;margin-top:8px;background:#fff}
+@media(max-height:520px){.fn1508 .docDialog.fnmodal{max-height:calc(100dvh - 16px);padding:10px}.fn1508 .fnmodal nav button{min-height:30px;padding:4px}.fn1508 .fnmodal .fnbar{padding:6px;margin-bottom:5px}}
+.fn1508 .fnsigngrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:16px}.fn1508 .fnsigncard{background:white;border:1px solid #d3e3ee;border-top:3px solid #176a98;border-radius:8px;padding:12px;display:grid;gap:7px}.fn1508 .fnsigncard span{font-size:12px;color:#176a98}.fn1508 .fnaccept{display:flex!important;gap:8px;align-items:center}.fn1508 .fnaccept input{width:auto!important;margin:0!important}

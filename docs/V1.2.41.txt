@@ -1,0 +1,1 @@
+V1.2.41: navegación y resumen documental compartidos con capítulo 5; accesos contextuales y estilos compactos para los nueve subnumerales. Sin cambios de reglas ni de registros. Las consultas de riesgos existentes conservan su límite de 100 registros por colección. No se añade vinculación individual de conflictos ni nuevas firmas.

@@ -1,0 +1,5 @@
+MC1506-06: primera etapa, catálogo y alcance individual de analistas.
+Ruta: 6.2 > Evaluación > MC1506 > Consultar. Revisar y guardar catálogo antes de configurar alcance.
+Publicar firestore.rules actualizado antes de usar. Nuevas colecciones sgcTechnical1506Catalog y sgcTechnical1506Scopes, acceso ADMIN/CALIDAD. Sin Cloud Functions ni migración de registros.
+Catálogo inicial tomado del ERP anterior; criterios pendientes de validación con Excel y métodos vigentes. No constituye autorización ni evaluación de competencia. Programación, cálculo, PDF y FEI pendientes.
+Compilación no ejecutada: dependencias no disponibles en caché.

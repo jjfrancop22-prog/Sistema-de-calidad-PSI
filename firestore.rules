@@ -67,11 +67,38 @@ service cloud.firestore {
    allow delete: if false;
   }
   // MC1507-04: perfil institucional por cargo, no por trabajador. Historial en revisiones.
+  match /sgcTechnical1506Annual/{id}{
+   allow get,list: if manager();
+   allow create: if manager() && request.resource.data.techniqueId!='ALL' && request.resource.data.status=='APROBADO' && request.resource.data.approvedBy==request.auth.uid && request.resource.data.approvedAt==request.time && request.resource.data.formatCode=='PSI-MC1506-06' && request.resource.data.rows is list && request.resource.data.rows.size()>0 && request.resource.data.rows.size()<=200 && request.resource.data.scopeRevision==get(/databases/$(database)/documents/sgcTechnical1506Scopes/$(request.resource.data.personId)).data.revision && request.resource.data.catalogRevision==get(/databases/$(database)/documents/sgcTechnical1506Catalog/master).data.revision && id==request.resource.data.personId+'_'+request.resource.data.year+'_'+request.resource.data.techniqueId;
+   allow update,delete: if false;
+  }
+  match /sgcTechnical1506Catalog/{id}{
+   allow get,list: if manager();
+   allow create,update: if manager() && id=='master' && request.resource.data.keys().hasOnly(['techniques','revision','updatedBy','updatedAt']) && request.resource.data.techniques is list && request.resource.data.techniques.size()<=100 && request.resource.data.revision is int && request.resource.data.revision==(resource == null ? 1 : resource.data.revision + 1) && request.resource.data.updatedBy==request.auth.uid && request.resource.data.updatedAt==request.time;
+   allow delete: if false;
+  }
+  match /sgcTechnical1506Evaluations/{id}{
+   allow get,list: if manager();
+   allow create,update: if manager() && request.resource.data.updatedBy==request.auth.uid && request.resource.data.updatedAt==request.time && request.resource.data.status in ['BORRADOR','CONFIRMADA'] && request.resource.data.revision is int && request.resource.data.revision==(resource == null ? 1 : resource.data.revision+1) && (resource == null || (resource.data.status=='BORRADOR' && resource.data.personId==request.resource.data.personId)) && exists(/databases/$(database)/documents/sgcPersonnel/$(request.resource.data.personId)) && request.resource.data.catalogRevision==get(/databases/$(database)/documents/sgcTechnical1506Catalog/master).data.revision;
+   allow delete: if false;
+  }
+  match /sgcTechnical1506Scopes/{id}{
+   allow get,list: if manager();
+   allow create,update: if manager() && exists(/databases/$(database)/documents/sgcPersonnel/$(id)) && request.resource.data.keys().hasOnly(['personId','assignments','revision','catalogRevision','updatedBy','updatedAt']) && request.resource.data.personId==id && request.resource.data.assignments is list && request.resource.data.assignments.size()<=100 && request.resource.data.revision is int && request.resource.data.revision==(resource == null ? 1 : resource.data.revision + 1) && request.resource.data.catalogRevision==get(/databases/$(database)/documents/sgcTechnical1506Catalog/master).data.revision && request.resource.data.updatedBy==request.auth.uid && request.resource.data.updatedAt==request.time;
+   allow delete: if false;
+  }
   match /sgcSkillsDelegations/{id}{allow read,write:if false;}
   match /sgcSkills1519/{id}{
    allow get,list: if manager();
    allow create: if manager() && request.resource.data.status == 'BORRADOR' && !('approval' in request.resource.data) && request.resource.data.updatedBy == request.auth.uid && request.resource.data.updatedAt == request.time;
    allow update: if manager() && resource.data.status == 'BORRADOR' && request.resource.data.status == 'BORRADOR' && !('approval' in request.resource.data) && request.resource.data.updatedBy == request.auth.uid && request.resource.data.updatedAt == request.time && request.resource.data.personId == resource.data.personId && request.resource.data.profileId == resource.data.profileId;
+   allow delete: if false;
+  }
+  match /sgcFunctions1508Signatures/{id}{allow read,write: if false;}
+  match /sgcFunctions1508/{id}{
+   allow get,list: if manager();
+   allow create: if manager() && !('signatures' in request.resource.data) && request.resource.data.personId == id && request.resource.data.status == "BORRADOR" && request.resource.data.editVersion == 1 && request.resource.data.updatedBy == request.auth.uid && request.resource.data.updatedAt == request.time;
+   allow update: if manager() && resource.data.status == "BORRADOR" && request.resource.data.status == "BORRADOR" && request.resource.data.personId == id && request.resource.data.editVersion == resource.data.editVersion + 1 && request.resource.data.updatedBy == request.auth.uid && request.resource.data.updatedAt == request.time;
    allow delete: if false;
   }
   match /sgcPositionProfiles/{id}{

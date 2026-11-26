@@ -1,7 +1,8 @@
 import React,{useState,useEffect} from 'react';
-import {collection,onSnapshot,getDocs,query,orderBy,limit,where} from 'firebase/firestore';
+import {collection,onSnapshot,getDocs,query,orderBy,limit,where,doc,getDoc} from 'firebase/firestore';
 import {db} from './firebase';
 import './structure5.css';
+import {preview as preview1508} from './Functions1508';
 import FieldCustody54 from './FieldCustody54';
 import DiffusionPG0204 from './DiffusionPG0204.jsx';
 import ChangeControl57b from './ChangeControl57b.jsx';
@@ -111,37 +112,57 @@ const roles55=[
  'Asistentes técnicos'
 ];
 const roleKey=s=>normalized(s).replace(/[^a-z0-9]+/g,' ').trim();
+// Alias institucionales explícitos: no se modifican cargos ni documentos firmados.
+const canonicalRole=s=>{
+ const key=roleKey(s);
+ if(['jefe de laboratorio de contaminantes atmosferico','jefe de laboratorio de contaminantes atmosfericos'].includes(key))return 'jefe de laboratorio de contaminantes atmosfericos';
+ if(['coordinador tecnico de sso','coordinador tecnico y sso','coordinador tecnico de seguridad y salud ocupacional','coordinador tecnico y seguridad y salud ocupacional'].includes(key))return 'coordinador tecnico y seguridad y salud ocupacional';
+ return key;
+};
 function Structure55B({manual1,manual2,documents,onOpenDocument,onPersonnel,onLibrary}){
- const [people,setPeople]=useState([]),[error,setError]=useState(''),[filter,setFilter]=useState('');
+ const [people,setPeople]=useState([]),[error,setError]=useState(''),[filter,setFilter]=useState(''),[records,setRecords]=useState(null),[busy,setBusy]=useState(false),[failure,setFailure]=useState(''),[selected,setSelected]=useState(null),[detail,setDetail]=useState(null);
  useEffect(()=>{
   const q=query(collection(db,'sgcPersonnel'),orderBy('name'),limit(200));
   return onSnapshot(q,s=>{setPeople(s.docs.map(d=>({id:d.id,...d.data()})));setError('')},e=>setError('No se pudo consultar Personal 6.2: '+e.message));
  },[]);
  const mc1508=documents.find(d=>/mc\s*[- ]?1508/i.test(`${d.code||''} ${d.title||''}`));
  const matches=(role,person)=>{
-  const r=roleKey(role),p=roleKey(person.position||'');
+  const r=canonicalRole(role),p=canonicalRole(person.position||'');
   if(!p)return false;
   if(r==='analistas')return p==='analista'||p.startsWith('analista ');
   if(r==='asistentes tecnicos')return p==='asistente tecnico'||p.startsWith('asistente tecnico ');
   return r===p;
  };
+ const activePeople=people.filter(p=>p.active!==false&&roles55.some(r=>matches(r,p)));
+ const record=p=>records?.[p.id];
+ const status=p=>!records?'Sin consultar':!record(p)?'Sin descripción':canonicalRole(record(p).position)!==canonicalRole(p.position)?'Cargo por verificar':({BORRADOR:'Borrador',PENDIENTE_APROBACION:'Pendiente de aprobación',PENDIENTE_RECEPCION:'Pendiente de recepción',VIGENTE:'Vigente'}[record(p).status]||'Estado por verificar');
+ const signatures=d=>['ELABORACION','APROBACION','RECEPCION'].filter(k=>d?.signatures?.[k]).length;
+ const valid=p=>status(p)==='Vigente'&&signatures(record(p))===3;
+ async function refresh(){setBusy(true);setFailure('');try{const snap=await getDocs(collection(db,'sgcFunctions1508'));setRecords(Object.fromEntries(snap.docs.map(d=>[d.id,d.data()])))}catch(e){setFailure('No se pudo consultar MC1508: '+e.message)}finally{setBusy(false)}}
+ async function openRole(role,linked){setSelected(role);setDetail(linked.length===1?linked[0].id:null);if(!records)await refresh()}
+ const selectedPeople=activePeople.filter(p=>selected&&matches(selected,p));
+ const current=selectedPeople.find(p=>p.id===detail), currentRecord=current&&record(current);
  const shown=roles55.filter(r=>roleKey(r).includes(roleKey(filter)));
  return <div className="psi55b">
-  <div className="psi55bHead"><div><span className="psi41Label">LITERAL 5.5 b) · CONSULTA CONECTADA</span><h4>Responsabilidades, autoridades e interrelaciones</h4><p>Los cargos proceden de la estructura del laboratorio. Los perfiles y las designaciones se completarán en Personal 6.2; esta vista no genera documentos duplicados.</p></div><span className="psi5Pill">5.5 b) · Consulta disponible</span></div>
+  <div className="psi55bHead"><div><span className="psi41Label">LITERAL 5.5 b) · CONSULTA CONECTADA</span><h4>Responsabilidades, autoridades e interrelaciones</h4><p>Los cargos proceden de la estructura del laboratorio. Consulta de funciones individuales MC1508 desde Personal 6.2.4, sin duplicar documentos.</p></div><span className="psi5Pill">5.5 b) · Consulta disponible</span></div>
   <details className="psi55CompactFold psi55CompactSources"><summary><strong>Referencias del literal</strong><span>Consultar documentos ▾</span></summary><div className="psi55bRefs">
    <div><strong>MC-01 · Capítulo 1</strong><small>Apartados 1.5.6 y 1.5.7</small><button type="button" className="outline" disabled={!manual1} onClick={()=>onOpenDocument?.(manual1)}>Ver MC-01</button></div>
    <div><strong>MC-02 · Capítulo 2</strong><small>Organización, funciones y autoridades</small><button type="button" className="outline" disabled={!manual2} onClick={()=>onOpenDocument?.(manual2)}>Ver MC-02</button></div>
    <div><strong>MC1508 · Descripción de funciones</strong><small>{mc1508?'Documento localizado en Biblioteca':'Se vinculará desde 6.2 cuando esté vigente'}</small><button type="button" className="outline" onClick={()=>mc1508?onOpenDocument?.(mc1508):onLibrary?.()}>{mc1508?'Consultar expediente':'Biblioteca ↗'}</button></div>
   </div>
   </details>
-  <div className="psi55bTableHead"><div><strong>Cargos del organigrama</strong><small>Coincidencias por denominación del cargo en el maestro de Personal 6.2</small></div><input aria-label="Buscar cargo" placeholder="Buscar cargo…" value={filter} onChange={e=>setFilter(e.target.value)}/></div>
+  <div className="psi55bTableHead"><div><strong>Cargos del organigrama</strong><small>Personal activo · registros MC1508 vinculados por identificador</small></div><input aria-label="Buscar cargo" placeholder="Buscar cargo…" value={filter} onChange={e=>setFilter(e.target.value)}/></div>
+  <div className="psi55Metrics">{[['Personal asociado',activePeople.length],['Vigentes',records?activePeople.filter(valid).length:'—'],['En proceso',records?activePeople.filter(p=>['Borrador','Pendiente de aprobación','Pendiente de recepción'].includes(status(p))).length:'—'],['Sin descripción / revisar',records?activePeople.filter(p=>!valid(p)&&!['Borrador','Pendiente de aprobación','Pendiente de recepción'].includes(status(p))).length:'—']].map(([l,v])=><div key={l}><small>{l}</small><strong>{v}</strong></div>)}<button className="outline" disabled={busy} onClick={refresh}>{busy?'Consultando…':records?'Actualizar MC1508':'Consultar MC1508'}</button></div>
+  {failure&&<p role="alert">{failure}</p>}
   {error&&<p className="psi55bWarning" role="status">{error}</p>}
   <div className="psi55bScroll"><table className="psi53Table"><thead><tr><th>Cargo</th><th>Personal registrado</th><th>Responsabilidades, autoridad y relaciones</th><th>Acción</th></tr></thead><tbody>{shown.map(role=>{
    const linked=people.filter(p=>p.active!==false&&matches(role,p));
-   const complete=linked.some(p=>Array.isArray(p.functions)&&p.functions.length>0);
-   return <tr key={role}><td><strong>{role}</strong></td><td>{linked.length?`${linked.length} persona(s) asociada(s)`:'Sin asignación identificada'}</td><td><span className={'psi5Pill '+(complete?'':'pending')}>{complete?'Funciones registradas · verificar autoridad':'Perfil funcional pendiente en 6.2'}</span></td><td><button type="button" className="outline" onClick={onPersonnel}>Consultar 6.2 ↗</button></td></tr>;
+   const count=linked.filter(valid).length;
+   return <tr key={role}><td><strong>{role}</strong></td><td>{linked.length?`${linked.length} persona(s) asociada(s)`:'Sin asignación identificada'}</td><td><span className={'psi5Pill '+(linked.length&&count===linked.length?'':'pending')}>{!linked.length?'Sin asignación':!records?'Sin consultar':linked.length===1?(status(linked[0])==='Vigente'&&!valid(linked[0])?'Firmas por verificar':status(linked[0])):`${count} de ${linked.length} vigentes`}</span></td><td><button type="button" className="outline" onClick={()=>linked.length?openRole(role,linked):onPersonnel?.()}>{linked.length>1?'Ver personal':linked.length?'Ver funciones':'Consultar 6.2 ↗'}</button></td></tr>;
   })}</tbody></table></div>
-  <div className="psi55bFoot">La coincidencia de cargos es orientativa; no acredita por sí sola responsabilidades, autoridad ni aceptación de funciones. Las descripciones MC1508 y autorizaciones individuales se incorporarán desde 6.2, conservando su control documental. No se declara conformidad automática.</div>
+  <div className="psi55bFoot">Consulta de solo lectura. La asignación por cargo es orientativa; las funciones se vinculan por identificador individual. No se declara conformidad automática ni autorización técnica.</div>
+  {selected&&<div className="docOverlay"><section className="docDialog psi55Detail" role="dialog" aria-modal="true" aria-label="Consulta MC1508"><header><div><small>5.5 b) · MC1508 · Consulta individual</small><h3>{selected}</h3></div><button className="outline" onClick={()=>{setSelected(null);setDetail(null)}}>Cerrar</button></header><div className="psi55DetailBody">{busy&&<p>Consultando registros…</p>}{failure&&<p role="alert">{failure}</p>}{selectedPeople.length>1&&<div className="psi55People">{selectedPeople.map(p=><button key={p.id} className="outline" aria-pressed={detail===p.id} onClick={()=>setDetail(p.id)}><strong>{p.name}</strong><small>{status(p)} · {signatures(record(p))}/3 firmas</small></button>)}</div>}{current&&<><h4>{current.name}</h4><p>{current.position} · {status(current)} · {signatures(currentRecord)}/3 firmas</p>{currentRecord?<>{canonicalRole(currentRecord.position)!==canonicalRole(current.position)&&<p role="alert">El cargo del registro no coincide con el maestro actual. Verifique en 6.2.4.</p>}{[['purpose','Objetivo'],['tasks','Funciones y tareas'],['responsibility','Responsabilidades'],['authority','Autoridad'],['permissions','Autorizaciones generales'],['reportTo','Reporta a'],['supervises','Supervisa a'],['substitution','Sustitución']].map(([k,l])=><section key={k} className="psi55Field"><h4>{l}</h4><div>{currentRecord[k]||'No registrado'}</div></section>)}<section className="psi55Field"><h4>Firmas FEI-PSI</h4>{[['ELABORACION','Elaboración'],['APROBACION','Aprobación'],['RECEPCION','Conocimiento y recepción']].map(([k,l])=><p key={k}>{l}: {currentRecord.signatures?.[k]?.signerName||'Pendiente'}</p>)}</section></>:<p>{records?'Sin descripción individual registrada.':'Información aún no consultada.'}</p>}</>}</div><footer><button className="outline" disabled={busy} onClick={refresh}>Actualizar</button>{currentRecord&&<button onClick={()=>{try{preview1508(currentRecord)}catch(e){setFailure(e.message)}}}>Vista previa PDF</button>}<button className="outline" onClick={()=>{setSelected(null);onPersonnel?.()}}>Ir a Personal 6.2 ↗</button></footer></section></div>}
+
  </div>;
 }
 

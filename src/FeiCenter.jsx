@@ -2,7 +2,7 @@ import React,{useState,useEffect} from 'react';
 import {auth} from './firebase';
 import CredentialManagement from './CredentialManagement.jsx';
 import './fei.css';
-const sources={all:'Todos los documentos',declarations:'MC0201 / MC0203 · Personal',consultants:'MC0205 · Consultoría',conflicts:'MC0206 · Conflictos',skills:'MC1519 · Habilidades',profiles:'MC1507 · Perfiles',selection:'MC1511 · Selección',induction:'MC1509 · Inducción'};
+const sources={annual1506:'MC1506 · Evaluación anual',functions:'MC1508 · Funciones',all:'Todos los documentos',declarations:'MC0201 / MC0203 · Personal',consultants:'MC0205 · Consultoría',conflicts:'MC0206 · Conflictos',skills:'MC1519 · Habilidades',profiles:'MC1507 · Perfiles',selection:'MC1511 · Selección',induction:'MC1509 · Inducción'};
 const tests=['PIN correcto','Rechazo de PIN incorrecto','Bloqueo por intentos','Inmutabilidad de registros','Detección de alteraciones','Enlace vencido','Enlace revocado','Acceso no autorizado','Trazabilidad del firmante','Verificación QR'];
 const date=v=>v?new Date(v).toLocaleString('es-EC',{timeZone:'America/Guayaquil'}):'—';
 export default function FeiCenter({account}){const [tab,T]=useState('Registro de firmas'),[source,S]=useState('all'),[rows,R]=useState([]),[next,N]=useState(null),[busy,B]=useState(false),[msg,M]=useState(''),[loaded,L]=useState(false),[detail,D]=useState(null),[query,Q]=useState(''),[origin,O]=useState('');
